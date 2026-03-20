@@ -1,0 +1,38 @@
+﻿<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="multilingualAudioTravelApp.EditProfilePage"
+    Title="Chỉnh sửa thông tin">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+
+            <Label Text="Họ và tên" FontSize="13" TextColor="Gray"/>
+            <Entry x:Name="NameEntry" Placeholder="Nhập họ và tên"/>
+
+            <Label Text="Email" FontSize="13" TextColor="Gray"/>
+            <Entry x:Name="EmailEntry" Placeholder="Nhập email" Keyboard="Email"/>
+
+            <Label Text="Mật khẩu mới (để trống nếu không đổi)"
+                   FontSize="13" TextColor="Gray"/>
+            <Entry x:Name="NewPasswordEntry"
+                   Placeholder="Nhập mật khẩu mới"
+                   IsPassword="True"/>
+
+            <Label Text="Xác nhận mật khẩu mới" FontSize="13" TextColor="Gray"/>
+            <Entry x:Name="ConfirmPasswordEntry"
+                   Placeholder="Nhập lại mật khẩu mới"
+                   IsPassword="True"/>
+
+            <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False"/>
+
+            <Button Text="Lưu thay đổi"
+                    BackgroundColor="#2196F3"
+                    TextColor="White"
+                    CornerRadius="10"
+                    HeightRequest="48"
+                    Clicked="OnSaveClicked"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

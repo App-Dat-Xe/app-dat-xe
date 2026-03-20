@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="RideHailingApp.RegisterPage"
+    Shell.NavBarIsVisible="False"
+    Title="Đăng ký"
+    BackgroundColor="#0F1117">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="28,56,28,40" Spacing="14">
+
+            <!-- Back button -->
+            <Button Text="← Quay lại"
+                    BackgroundColor="Transparent"
+                    TextColor="#8A8FA3"
+                    FontSize="14"
+                    HorizontalOptions="Start"
+                    Padding="0"
+                    Clicked="OnGoToLoginClicked"/>
+
+            <!-- Title -->
+            <Label Text="Tạo tài khoản"
+                   FontSize="30"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   Margin="0,8,0,2"/>
+
+            <Label Text="Tham gia RideNow để bắt đầu di chuyển"
+                   FontSize="14"
+                   TextColor="#8A8FA3"
+                   Margin="0,0,0,16"/>
+
+            <!-- Họ và tên -->
+            <Label Text="Họ và tên" TextColor="#8A8FA3" FontSize="13" Margin="4,0,0,0"/>
+            <Border BackgroundColor="#1C1F2E" StrokeThickness="1" Stroke="#2E3348" Padding="0">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                <Entry x:Name="FullNameEntry"
+                       Placeholder="Nguyễn Văn A"
+                       PlaceholderColor="#4A5068"
+                       TextColor="White"
+                       BackgroundColor="Transparent"
+                       Margin="16,12"/>
+            </Border>
+
+            <!-- Email -->
+            <Label Text="Email" TextColor="#8A8FA3" FontSize="13" Margin="4,4,0,0"/>
+            <Border BackgroundColor="#1C1F2E" StrokeThickness="1" Stroke="#2E3348" Padding="0">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                <Entry x:Name="EmailEntry"
+                       Placeholder="email@example.com"
+                       PlaceholderColor="#4A5068"
+                       TextColor="White"
+                       Keyboard="Email"
+                       BackgroundColor="Transparent"
+                       Margin="16,12"/>
+            </Border>
+
+            <!-- Số điện thoại -->
+            <Label Text="Số điện thoại" TextColor="#8A8FA3" FontSize="13" Margin="4,4,0,0"/>
+            <Border BackgroundColor="#1C1F2E" StrokeThickness="1" Stroke="#2E3348" Padding="0">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                <Entry x:Name="PhoneEntry"
+                       Placeholder="0901 234 567"
+                       PlaceholderColor="#4A5068"
+                       TextColor="White"
+                       Keyboard="Telephone"
+                       BackgroundColor="Transparent"
+                       Margin="16,12"/>
+            </Border>
+
+            <!-- Chọn vùng -->
+            <Label Text="Vùng (dùng để kết nối server)" TextColor="#8A8FA3" FontSize="13" Margin="4,4,0,0"/>
+            <Border BackgroundColor="#1C1F2E" StrokeThickness="1" Stroke="#2E3348" Padding="0">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                <Picker x:Name="RegionPicker"
+                        Title="Chọn khu vực của bạn"
+                        TitleColor="#4A5068"
+                        TextColor="White"
+                        BackgroundColor="Transparent"
+                        Margin="12,8">
+                    <Picker.Items>
+                        <x:String>🟢 Miền Nam (TP.HCM, Bình Dương, Đồng Nai...)</x:String>
+                        <x:String>🔵 Miền Bắc (Hà Nội, Hải Phòng, Quảng Ninh...)</x:String>
+                    </Picker.Items>
+                </Picker>
+            </Border>
+
+            <!-- Mật khẩu -->
+            <Label Text="Mật khẩu" TextColor="#8A8FA3" FontSize="13" Margin="4,4,0,0"/>
+            <Border BackgroundColor="#1C1F2E" StrokeThickness="1" Stroke="#2E3348" Padding="0">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                <Entry x:Name="PasswordEntry"
+                       Placeholder="Tối thiểu 6 ký tự"
+                       PlaceholderColor="#4A5068"
+                       TextColor="White"
+                       IsPassword="True"
+                       BackgroundColor="Transparent"
+                       Margin="16,12"/>
+            </Border>
+
+            <!-- Xác nhận mật khẩu -->
+            <Label Text="Xác nhận mật khẩu" TextColor="#8A8FA3" FontSize="13" Margin="4,4,0,0"/>
+            <Border BackgroundColor="#1C1F2E" StrokeThickness="1" Stroke="#2E3348" Padding="0">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                <Entry x:Name="ConfirmPasswordEntry"
+                       Placeholder="Nhập lại mật khẩu"
+                       PlaceholderColor="#4A5068"
+                       TextColor="White"
+                       IsPassword="True"
+                       BackgroundColor="Transparent"
+                       Margin="16,12"/>
+            </Border>
+
+            <!-- Error -->
+            <Label x:Name="ErrorLabel"
+                   TextColor="#FF5252"
+                   FontSize="13"
+                   IsVisible="False"
+                   HorizontalOptions="Center"/>
+
+            <!-- Nút đăng ký -->
+            <Button Text="Tạo tài khoản"
+                    BackgroundColor="#00C853"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    CornerRadius="14"
+                    HeightRequest="54"
+                    Margin="0,8,0,0"
+                    Clicked="OnRegisterClicked"/>
+
+            <!-- Điều khoản -->
+            <Label TextColor="#4A5068" FontSize="12" HorizontalOptions="Center" HorizontalTextAlignment="Center">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Bằng cách đăng ký, bạn đồng ý với "/>
+                        <Span Text="Điều khoản dịch vụ" TextColor="#00C853"/>
+                        <Span Text=" và "/>
+                        <Span Text="Chính sách bảo mật" TextColor="#00C853"/>
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

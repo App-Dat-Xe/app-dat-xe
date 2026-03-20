@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RideHailing-App</name>
+    </assembly>
+    <members>
+        <member name="M:RideHailingApp.ProfileViewModel.SyncDarkModeFromSystem">
+            <summary>
+            Gọi khi quay lại trang — đồng bộ trạng thái switch với theme thực tế.
+            Không đổi theme, chỉ cập nhật giá trị binding.
+            </summary>
+        </member>
+        <member name="M:RideHailingApp.ProfileViewModel.RefreshMenus">
+            <summary>
+            Cập nhật lại danh sách menu (icon failover có thể thay đổi).
+            Không tạo lại ViewModel, chỉ clear + add lại items.
+            </summary>
+        </member>
+        <member name="T:multilingualAudioTravelApp.Resource">
+            <summary>
+            Android Resource Designer class.
+            Exposes the Android Resource designer assembly into the project Namespace.
+            </summary>
+        </member>
+    </members>
+</doc>

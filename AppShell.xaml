@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="RideHailingApp.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:RideHailingApp"
+    Shell.FlyoutBehavior="Disabled"
+    Shell.TabBarBackgroundColor="{AppThemeBinding Dark=#0F1117, Light=#F5F5F5}">
+
+    
+
+    <TabBar>
+
+        <Tab Title="Đặt xe" Icon="map.png">
+            <ShellContent
+                ContentTemplate="{DataTemplate local:MainPage}"
+                Route="MainPage"/>
+        </Tab>
+
+        <Tab Title="Lịch sử" Icon="history.png">
+            <ShellContent
+                ContentTemplate="{DataTemplate local:TripHistoryPage}"
+                Route="TripHistoryPage"/>
+        </Tab>
+
+        <Tab Title="Hồ sơ" Icon="people.png">
+            <ShellContent
+                ContentTemplate="{DataTemplate local:ProfilePage}"
+                Route="ProfilePage"/>
+        </Tab>
+
+    </TabBar>
+
+</Shell>
