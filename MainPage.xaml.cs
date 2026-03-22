@@ -15,6 +15,8 @@ public partial class MainPage : ContentPage
 {
     private MemoryLayer _currentLocationLayer;
     private MemoryLayer _driverLayer;
+    private CancellationTokenSource _cts;
+    private bool _isTracking = false;
 
     // ── Mock: danh sách tài xế giả ──
     private readonly List<MockDriver> _mockDrivers = new()
@@ -123,6 +125,61 @@ public partial class MainPage : ContentPage
             MyMap.Map.Navigator.CenterOn(new MPoint(center.x, center.y));
             MyMap.Map.Navigator.ZoomTo(2);
         });
+        _currentLocationLayer = new MemoryLayer
+        {
+            Name = "LocationLayer",
+            Style = new SymbolStyle
+            {
+                Fill = new MBrush(MColor.FromArgb(255, 33, 150, 243)), // Màu xanh dương cho GPS
+                SymbolScale = 0.8,
+                Outline = new Pen { Color = MColor.White, Width = 2 }
+            }
+        };
+        MyMap.Map.Layers.Add(_currentLocationLayer);
+
+        // Bắt đầu track GPS khi mở app
+        StartTrackingLocation();
+    }
+    private async void StartTrackingLocation()
+    {
+        try
+        {
+            _isTracking = true;
+            while (_isTracking)
+            {
+                var request = new GeolocationRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(5));
+                _cts = new CancellationTokenSource();
+                var location = await Geolocation.Default.GetLocationAsync(request, _cts.Token);
+
+                if (location != null)
+                {
+                    UpdateUserLocationOnMap(location.Latitude, location.Longitude);
+                }
+
+                await Task.Delay(5000); // Cập nhật mỗi 5 giây
+            }
+        }
+        catch (Exception ex)
+        {
+            // Xử lý lỗi (người dùng tắt GPS, không cấp quyền...)
+            System.Diagnostics.Debug.WriteLine($"GPS Error: {ex.Message}");
+        }
+    }
+
+    private void UpdateUserLocationOnMap(double lat, double lon)
+    {
+        var coords = SphericalMercator.FromLonLat(lon, lat);
+        var feature = new PointFeature(new MPoint(coords.x, coords.y));
+
+        // Cập nhật dữ liệu cho layer
+        _currentLocationLayer.Features = new List<IFeature> { feature };
+        _currentLocationLayer.DataHasChanged();
+    }
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isTracking = false;
+        _cts?.Cancel();
     }
 
     // Chạm vào tài xế trên bản đồ → hiện popup
@@ -202,11 +259,20 @@ public partial class MainPage : ContentPage
             $"Hệ thống đang tìm tài xế gần bạn đến: {dest}", "OK");
     }
 
-    private void OnMyLocationClicked(object sender, EventArgs e)
+    private async void OnMyLocationClicked(object sender, EventArgs e)
     {
-        var center = SphericalMercator.FromLonLat(106.7035, 10.7605);
-        MyMap.Map.Navigator.CenterOn(new MPoint(center.x, center.y));
-        MyMap.Map.Navigator.ZoomTo(2);
+        var location = await Geolocation.Default.GetLastKnownLocationAsync();
+        if (location == null)
+        {
+            location = await Geolocation.Default.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Medium));
+        }
+
+        if (location != null)
+        {
+            var center = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
+            MyMap.Map.Navigator.CenterOn(new MPoint(center.x, center.y));
+            MyMap.Map.Navigator.ZoomTo(2);
+        }
     }
 
     protected override void OnAppearing()

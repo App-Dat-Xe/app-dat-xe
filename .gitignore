@@ -1,0 +1,10 @@
+# Visual Studio files
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.shellmnt
+
+# MAUI/Android/iOS temporary files
+*.com.apple.InterfaceBuilder
