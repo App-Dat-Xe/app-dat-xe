@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
-
 namespace RideHailingApp;
 
 public static class MauiProgram
