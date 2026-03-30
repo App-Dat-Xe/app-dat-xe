@@ -1,0 +1,224 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\loginpage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|solutionrelative:loginpage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\ridehailing-app.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|solutionrelative:ridehailing-app.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|..\\RideHailingApi\\RideHailingApi.csproj|c:\\users\\lhnhan\\source\\repos\\ridehailingapi\\ridehailingapi.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\loginpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|solutionrelative:loginpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\platforms\\ios\\appdelegate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|solutionrelative:platforms\\ios\\appdelegate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\platforms\\windows\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|solutionrelative:platforms\\windows\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\platforms\\maccatalyst\\appdelegate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|solutionrelative:platforms\\maccatalyst\\appdelegate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|solutionrelative:mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\services\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailing-App.csproj|solutionrelative:services\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|..\\RideHailingApi\\RideHailingApi.csproj|c:\\users\\lhnhan\\source\\repos\\ridehailingapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|..\\RideHailingApi\\RideHailingApi.csproj|c:\\users\\lhnhan\\source\\repos\\ridehailingapi\\services\\dbconnectionfactory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|..\\RideHailingApi\\RideHailingApi.csproj|c:\\users\\lhnhan\\source\\repos\\ridehailingapi\\models\\triprequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|..\\RideHailingApi\\RideHailingApi.csproj|c:\\users\\lhnhan\\source\\repos\\ridehailingapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "LoginPage.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\LoginPage.xaml.cs",
+              "RelativeDocumentMoniker": "LoginPage.xaml.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\LoginPage.xaml.cs",
+              "RelativeToolTip": "LoginPage.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T16:17:14.739Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "LoginPage.xaml",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\LoginPage.xaml",
+              "RelativeDocumentMoniker": "LoginPage.xaml",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\LoginPage.xaml",
+              "RelativeToolTip": "LoginPage.xaml",
+              "ViewState": "AgIAAG8AAAAAAAAAAIBJwDUAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-03-27T16:16:30.039Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AppDelegate.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\Platforms\\MacCatalyst\\AppDelegate.cs",
+              "RelativeDocumentMoniker": "Platforms\\MacCatalyst\\AppDelegate.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\Platforms\\MacCatalyst\\AppDelegate.cs",
+              "RelativeToolTip": "Platforms\\MacCatalyst\\AppDelegate.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T16:00:17.955Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\Platforms\\Windows\\App.xaml.cs",
+              "RelativeDocumentMoniker": "Platforms\\Windows\\App.xaml.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\Platforms\\Windows\\App.xaml.cs",
+              "RelativeToolTip": "Platforms\\Windows\\App.xaml.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAEwBYAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T16:00:07.561Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AppDelegate.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\Platforms\\iOS\\AppDelegate.cs",
+              "RelativeDocumentMoniker": "Platforms\\iOS\\AppDelegate.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\Platforms\\iOS\\AppDelegate.cs",
+              "RelativeToolTip": "Platforms\\iOS\\AppDelegate.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T15:59:53.745Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "MauiProgram.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\MauiProgram.cs",
+              "RelativeDocumentMoniker": "MauiProgram.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\MauiProgram.cs",
+              "RelativeToolTip": "MauiProgram.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T15:57:54.264Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\Program.cs",
+              "RelativeDocumentMoniker": "..\\RideHailingApi\\Program.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\Program.cs",
+              "RelativeToolTip": "..\\RideHailingApi\\Program.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABUAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T15:49:06.705Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "DbConnectionFactory.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\Services\\DbConnectionFactory.cs",
+              "RelativeDocumentMoniker": "..\\RideHailingApi\\Services\\DbConnectionFactory.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\Services\\DbConnectionFactory.cs",
+              "RelativeToolTip": "..\\RideHailingApi\\Services\\DbConnectionFactory.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T15:48:03.944Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "TripRequest.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\Models\\TripRequest.cs",
+              "RelativeDocumentMoniker": "..\\RideHailingApi\\Models\\TripRequest.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\Models\\TripRequest.cs",
+              "RelativeToolTip": "..\\RideHailingApi\\Models\\TripRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T15:47:26.089Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\appsettings.json",
+              "RelativeDocumentMoniker": "..\\RideHailingApi\\appsettings.json",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\appsettings.json",
+              "RelativeToolTip": "..\\RideHailingApi\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-03-27T15:46:13.444Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "RideHailingApi.csproj",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\RideHailingApi.csproj",
+              "RelativeDocumentMoniker": "..\\RideHailingApi\\RideHailingApi.csproj",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\RideHailingApi\\RideHailingApi.csproj",
+              "RelativeToolTip": "..\\RideHailingApi\\RideHailingApi.csproj",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-03-27T14:33:17.444Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ApiService.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\Services\\ApiService.cs",
+              "RelativeDocumentMoniker": "Services\\ApiService.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\Services\\ApiService.cs",
+              "RelativeToolTip": "Services\\ApiService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T14:26:51.991Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "RideHailing-App.csproj",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\RideHailing-App.csproj",
+              "RelativeDocumentMoniker": "RideHailing-App.csproj",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\RideHailing-App.csproj",
+              "RelativeToolTip": "RideHailing-App.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-03-27T09:30:46.195Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
