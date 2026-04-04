@@ -17,6 +17,8 @@ public partial class MainPage : ContentPage
     private MemoryLayer _driverLayer;
     private CancellationTokenSource _cts;
     private bool _isTracking = false;
+    // Khai báo ApiService
+    private readonly RideHailingApp.Services.ApiService _apiService = new RideHailingApp.Services.ApiService();
 
     // ── Mock: danh sách tài xế giả ──
     private readonly List<MockDriver> _mockDrivers = new()
@@ -247,7 +249,6 @@ public partial class MainPage : ContentPage
                 "OK");
             return;
         }
-
         string dest = DestinationEntry.Text?.Trim();
         if (string.IsNullOrEmpty(dest))
         {
@@ -255,8 +256,19 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        await DisplayAlert("Đang tìm tài xế...",
-            $"Hệ thống đang tìm tài xế gần bạn đến: {dest}", "OK");
+        await DisplayAlert("Đang xử lý...", "Đang kết nối với Server API...", "OK");
+
+        // --- GỌI API ĐẶT XE THẬT XUỐNG SQL SERVER ---
+        // Giả sử UserID = 1, Điểm đón là "Vị trí hiện tại", Khu vực là "South"
+        string ketQua = await _apiService.DatXeAsync(
+            userId: 1,
+            diemDon: "Vị trí hiện tại của khách",
+            diemDen: dest,
+            khuVuc: "South"
+        );
+
+        // In kết quả từ Server ra màn hình
+        await DisplayAlert("Phản hồi từ Server", ketQua, "OK");
     }
 
     private async void OnMyLocationClicked(object sender, EventArgs e)

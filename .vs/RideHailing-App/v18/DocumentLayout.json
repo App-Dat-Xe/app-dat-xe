@@ -1,7 +1,24 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\khang\\source\\repos\\app-dat-xe\\",
-  "Documents": [],
+  "WorkspaceRootPath": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapp\\mainpage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|solutionrelative:ridehailingapp\\mainpage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapp\\mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|solutionrelative:ridehailingapp\\mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapp\\mainpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|solutionrelative:ridehailingapp\\mainpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapp\\services\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|solutionrelative:ridehailingapp\\services\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -9,7 +26,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -34,6 +51,58 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainPage.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\MainPage.xaml.cs",
+              "RelativeDocumentMoniker": "RideHailingApp\\MainPage.xaml.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\MainPage.xaml.cs",
+              "RelativeToolTip": "RideHailingApp\\MainPage.xaml.cs",
+              "ViewState": "AgIAAPkAAAAAAAAAAAAcwPoAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:54:45.348Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MainPage.xaml",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\MainPage.xaml",
+              "RelativeDocumentMoniker": "RideHailingApp\\MainPage.xaml",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\MainPage.xaml",
+              "RelativeToolTip": "RideHailingApp\\MainPage.xaml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-04T06:54:39.62Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MauiProgram.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\MauiProgram.cs",
+              "RelativeDocumentMoniker": "RideHailingApp\\MauiProgram.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\MauiProgram.cs",
+              "RelativeToolTip": "RideHailingApp\\MauiProgram.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:54:11.396Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ApiService.cs",
+              "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\Services\\ApiService.cs",
+              "RelativeDocumentMoniker": "RideHailingApp\\Services\\ApiService.cs",
+              "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\Services\\ApiService.cs",
+              "RelativeToolTip": "RideHailingApp\\Services\\ApiService.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAYwAIAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-04T06:50:28.226Z",
+              "EditorCaption": ""
             }
           ]
         }

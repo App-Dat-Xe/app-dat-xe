@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using RideHailingApp.Services;
+using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 namespace RideHailingApp;
 
@@ -19,7 +20,7 @@ public static class MauiProgram
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
-
+        builder.Services.AddSingleton<ApiService>();
         return builder.Build();
     }
 }
