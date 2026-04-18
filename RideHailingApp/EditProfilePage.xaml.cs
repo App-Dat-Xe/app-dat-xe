@@ -1,23 +1,25 @@
-﻿using multilingualAudioTravelApp.Services;
+using RideHailingApp.Services;
 
-namespace multilingualAudioTravelApp;
+namespace RideHailingApp;
 
 public partial class EditProfilePage : ContentPage
 {
-    private readonly DatabaseService _dbService = new DatabaseService();
-    private string _currentEmail;
+    private readonly ApiService _api;
+    private readonly SessionService _session;
 
     public EditProfilePage()
     {
         InitializeComponent();
+        // Lấy services từ DI container
+        _api = MauiProgram.Services.GetRequiredService<ApiService>();
+        _session = MauiProgram.Services.GetRequiredService<SessionService>();
         LoadCurrentInfo();
     }
 
     private void LoadCurrentInfo()
     {
-        _currentEmail = Preferences.Get("userEmail", "");
-        NameEntry.Text = Preferences.Get("userName", "");
-        EmailEntry.Text = _currentEmail;
+        NameEntry.Text = _session.FullName;
+        EmailEntry.Text = _session.UserName;
     }
 
     private async void OnSaveClicked(object sender, EventArgs e)
@@ -27,14 +29,12 @@ public partial class EditProfilePage : ContentPage
         var newPassword = NewPasswordEntry.Text;
         var confirm = ConfirmPasswordEntry.Text;
 
-        // Kiểm tra tên và email
         if (string.IsNullOrEmpty(newName) || string.IsNullOrEmpty(newEmail))
         {
             ShowError("Họ tên và email không được để trống.");
             return;
         }
 
-        // Nếu có nhập mật khẩu mới thì kiểm tra
         if (!string.IsNullOrEmpty(newPassword))
         {
             if (newPassword.Length < 6)
@@ -42,7 +42,6 @@ public partial class EditProfilePage : ContentPage
                 ShowError("Mật khẩu mới phải có ít nhất 6 ký tự.");
                 return;
             }
-
             if (newPassword != confirm)
             {
                 ShowError("Mật khẩu xác nhận không khớp.");
@@ -52,23 +51,28 @@ public partial class EditProfilePage : ContentPage
 
         ErrorLabel.IsVisible = false;
 
-        // Lưu tất cả trong 1 lần
-        var success = await _dbService.UpdateProfileAsync(
-            _currentEmail,
-            newName,
-            newEmail,
-            string.IsNullOrEmpty(newPassword) ? null : newPassword
-        );
-
-        if (success)
+        var result = await _api.UpdateProfileAsync(_session.UserID, new UpdateProfileRequest
         {
-            _currentEmail = newEmail;
+            FullName = newName!,
+            Phone = _session.Phone,
+            NewPassword = string.IsNullOrEmpty(newPassword) ? null : newPassword
+        });
+
+        if (result.IsReadOnlyMode)
+        {
+            ShowError(result.ErrorMessage ?? "Hệ thống đang Read-Only, không thể cập nhật.");
+            return;
+        }
+
+        if (result.IsSuccess)
+        {
+            _session.Save(_session.UserID, _session.UserName, newName!, _session.Phone, _session.RegisteredRegion);
             await DisplayAlert("Thành công", "Thông tin đã được cập nhật!", "OK");
             await Shell.Current.GoToAsync("..");
         }
         else
         {
-            ShowError("Email này đã được sử dụng bởi tài khoản khác.");
+            ShowError(result.ErrorMessage ?? "Cập nhật thất bại.");
         }
     }
 

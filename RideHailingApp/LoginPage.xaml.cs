@@ -1,62 +1,37 @@
+using RideHailingApp.Services;
+
 namespace RideHailingApp;
 
 public partial class LoginPage : ContentPage
 {
-    // ── Mock: tài khoản giả để test ──
-    private const string MOCK_EMAIL    = "test@gmail.com";
-    private const string MOCK_PASSWORD = "123456";
-    private const string MOCK_NAME     = "Nguyễn Văn A";
+    private readonly ApiService _apiService;
 
     public LoginPage()
     {
         InitializeComponent();
+        _apiService = MauiProgram.Services.GetRequiredService<ApiService>();
     }
 
-    // Khi trang hiện ra: giả lập phát hiện vùng + server
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await SimulateRegionDetectionAsync();
+        await SetupUIStatusAsync();
     }
 
-    // Giả lập xác định vị trí và kết nối server (không cần GPS thật, không cần DB)
-    private async Task SimulateRegionDetectionAsync()
+    // Chỉ dùng để khởi tạo giao diện lúc mới vào, không giả lập nữa
+    private async Task SetupUIStatusAsync()
     {
-        RegionLabel.Text = "Đang xác định vị trí...";
-        ServerStatusDot.TextColor = Color.FromArgb("#FFC107");
-        ServerBanner.IsVisible = true;
-        ServerBannerText.Text = "Đang xác định vị trí GPS...";
+        RegionLabel.Text = "Sẵn sàng kết nối...";
+        ServerStatusDot.TextColor = Color.FromArgb("#00C853");
+        ServerBanner.IsVisible = false;
         ReadOnlyBanner.IsVisible = false;
-
-        await Task.Delay(1200); // giả lập thời gian lấy GPS
-
-        // Đọc cờ giả lập failover (để demo cho thầy)
-        bool simulateFailover = Preferences.Get("simulateFailover", false);
-
-        if (simulateFailover)
-        {
-            // ⚠️ Giả lập: Primary sập → dùng Replica
-            Preferences.Set("isReadOnly", true);
-            RegionLabel.Text = "Server Miền Nam (Dự phòng)";
-            ServerBannerText.Text = "⚠ Dùng server dự phòng (Replica HCM)";
-            ServerStatusDot.TextColor = Color.FromArgb("#FFC107");
-            ReadOnlyBanner.IsVisible = true;
-        }
-        else
-        {
-            // ✅ Bình thường: Primary hoạt động
-            Preferences.Set("isReadOnly", false);
-            RegionLabel.Text = "Server Miền Nam (TP.HCM)";
-            ServerBannerText.Text = "✓ Đã kết nối Server Miền Nam";
-            ServerStatusDot.TextColor = Color.FromArgb("#00C853");
-            ReadOnlyBanner.IsVisible = false;
-        }
+        await Task.CompletedTask;
     }
 
-    // Xử lý nút Đăng nhập
+    // Xử lý nút Đăng nhập gọi API thật
     private async void OnLoginClicked(object sender, EventArgs e)
     {
-        var email    = EmailEntry.Text?.Trim();
+        var email = EmailEntry.Text?.Trim();
         var password = PasswordEntry.Text;
 
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
@@ -66,23 +41,35 @@ public partial class LoginPage : ContentPage
         }
 
         LoginButton.IsEnabled = false;
-        LoginButton.Text = "Đang đăng nhập...";
+        LoginButton.Text = "Đang xác thực...";
         ErrorLabel.IsVisible = false;
 
-        await Task.Delay(800); // giả lập gọi server
+        // GỌI API ĐĂNG NHẬP XUỐNG SQL SERVER
+        var result = await _apiService.LoginAsync(email, password);
 
-        if (email == MOCK_EMAIL && password == MOCK_PASSWORD)
+        if (result.IsSuccess && result.Data != null)
         {
+            // LƯU THÔNG TIN THẬT TỪ DATABASE VÀO ĐIỆN THOẠI
             Preferences.Set("isLoggedIn", true);
-            Preferences.Set("userEmail", MOCK_EMAIL);
-            Preferences.Set("userName",  MOCK_NAME);
+            Preferences.Set("userID", result.Data.User.UserID);
+            Preferences.Set("userEmail", result.Data.User.UserName);
+            Preferences.Set("userName", result.Data.User.FullName);
+            Preferences.Set("userRegion", result.Data.User.RegisteredRegion);
+            Preferences.Set("isReadOnly", false);
+
             Application.Current.MainPage = new AppShell();
+        }
+        else if (result.IsReadOnlyMode)
+        {
+            ShowError("Hệ thống đang bảo trì. Chức năng đăng nhập tạm khóa.");
+            LoginButton.IsEnabled = true;
+            LoginButton.Text = "Đăng nhập";
         }
         else
         {
-            ShowError("Email hoặc mật khẩu không đúng.\nThử: test@gmail.com / 123456");
+            ShowError(result.ErrorMessage ?? "Email hoặc mật khẩu không đúng.");
             LoginButton.IsEnabled = true;
-            LoginButton.Text = "Đang đăng nhập...";
+            LoginButton.Text = "Đăng nhập";
         }
     }
 

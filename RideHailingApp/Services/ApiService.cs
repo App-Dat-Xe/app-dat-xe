@@ -1,60 +1,153 @@
-﻿using System.Net.Http.Json;
+using System.Net;
+using System.Net.Http.Json;
 
-namespace RideHailingApp.Services // Thay bằng namespace chuẩn của app bạn
+namespace RideHailingApp.Services
 {
+    // Lớp giao tiếp duy nhất với backend.
+    // Tự động gắn header X-Region (đọc từ GeoLocatorService) vào mọi request.
+    // Phân biệt rõ 3 trạng thái: thành công / read-only (503) / lỗi.
     public class ApiService
     {
         private readonly HttpClient _httpClient;
+        private readonly GeoLocatorService _geo;
 
-        public ApiService()
+        public ApiService(GeoLocatorService geo)
         {
-            // 1. Vượt rào bảo mật SSL cục bộ (Bắt buộc khi test Localhost)
-            var handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
-            _httpClient = new HttpClient(handler);
-            string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
-                             ? "https://10.0.2.2:7285"   // Cửa cho Android
-                             : "https://localhost:7285"; // Cửa cho Windows
+            _geo = geo;
 
+            // Bypass SSL self-signed khi test localhost
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+            };
+            _httpClient = new HttpClient(handler)
+            {
+                Timeout = TimeSpan.FromSeconds(10)
+            };
+
+            string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
+                ? "https://10.0.2.2:7285"   // Android emulator → host loopback
+                : "https://localhost:7285"; // Windows / iOS simulator
             _httpClient.BaseAddress = new Uri(baseUrl);
         }
 
-        // Hàm 1: Test đâm xuyên Database
+        // ───────────────── Helpers ─────────────────
+
+        private HttpRequestMessage BuildRequest(HttpMethod method, string path, object? body = null)
+        {
+            var req = new HttpRequestMessage(method, path);
+            req.Headers.Add("X-Region", _geo.GetCachedRegion());
+            if (body != null)
+                req.Content = JsonContent.Create(body);
+            return req;
+        }
+
+        private async Task<ApiResult<T>> SendAsync<T>(HttpRequestMessage req)
+        {
+            try
+            {
+                var resp = await _httpClient.SendAsync(req);
+
+                if (resp.IsSuccessStatusCode)
+                {
+                    var data = await resp.Content.ReadFromJsonAsync<T>();
+                    return ApiResult<T>.Success(data!);
+                }
+
+                if (resp.StatusCode == HttpStatusCode.ServiceUnavailable)
+                {
+                    var msg = await resp.Content.ReadAsStringAsync();
+                    return ApiResult<T>.ReadOnly("Hệ thống đang ở chế độ Read-Only (Server Chính bảo trì).");
+                }
+
+                var err = await resp.Content.ReadAsStringAsync();
+                return ApiResult<T>.Fail($"Lỗi {(int)resp.StatusCode}: {err}");
+            }
+            catch (TaskCanceledException)
+            {
+                return ApiResult<T>.Fail("Hết thời gian chờ — kiểm tra kết nối mạng.");
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<T>.Fail($"Lỗi mạng: {ex.Message}");
+            }
+        }
+
+        // ───────────────── Auth ─────────────────
+
+        public Task<ApiResult<LoginResponse>> LoginAsync(string userName, string password)
+        {
+            var req = BuildRequest(HttpMethod.Post, "/api/auth/login",
+                new LoginRequest { UserName = userName, Password = password });
+            return SendAsync<LoginResponse>(req);
+        }
+
+        public Task<ApiResult<object>> RegisterAsync(RegisterRequest body)
+        {
+            var req = BuildRequest(HttpMethod.Post, "/api/auth/register", body);
+            return SendAsync<object>(req);
+        }
+
+        // ───────────────── Users ─────────────────
+
+        public Task<ApiResult<UserDto>> GetProfileAsync(int userId)
+        {
+            var req = BuildRequest(HttpMethod.Get, $"/api/users/{userId}");
+            return SendAsync<UserDto>(req);
+        }
+
+        public Task<ApiResult<object>> UpdateProfileAsync(int userId, UpdateProfileRequest body)
+        {
+            var req = BuildRequest(HttpMethod.Put, $"/api/users/{userId}", body);
+            return SendAsync<object>(req);
+        }
+
+        // ───────────────── Trips ─────────────────
+
+        public Task<ApiResult<object>> BookTripAsync(int userId, string pickup, string dropoff)
+        {
+            var body = new TripBookingRequest
+            {
+                UserID = userId,
+                PickupLocation = pickup,
+                DropoffLocation = dropoff,
+                Region = _geo.GetCachedRegion()
+            };
+            var req = BuildRequest(HttpMethod.Post, "/api/trips/book-trip", body);
+            return SendAsync<object>(req);
+        }
+
+        public Task<ApiResult<List<TripHistoryItem>>> GetTripHistoryAsync(int userId)
+        {
+            var req = BuildRequest(HttpMethod.Get, $"/api/trips/history/{userId}");
+            return SendAsync<List<TripHistoryItem>>(req);
+        }
+
+        // ───────────────── Health check ─────────────────
+
         public async Task<string> TestKetNoiAsync(string khuVuc)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/api/trips/test-connection/{khuVuc}");
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadAsStringAsync();
-                }
-                return $"Lỗi Server: {response.StatusCode}";
+                var resp = await _httpClient.GetAsync($"/api/trips/test-connection/{khuVuc}");
+                return resp.IsSuccessStatusCode
+                    ? await resp.Content.ReadAsStringAsync()
+                    : $"Lỗi Server: {resp.StatusCode}";
             }
             catch (Exception ex)
             {
                 return $"Lỗi mạng: {ex.Message}";
             }
         }
+
+        // Giữ method cũ để không phá MainPage.OnFindDriverClicked
         public async Task<string> DatXeAsync(int userId, string diemDon, string diemDen, string khuVuc)
         {
-            try
-            {
-                var requestData = new
-                {
-                    UserID = userId,
-                    PickupLocation = diemDon,
-                    DropoffLocation = diemDen,
-                    Region = khuVuc
-                };
-
-                var response = await _httpClient.PostAsJsonAsync("/api/trips/book-trip", requestData);
-                return await response.Content.ReadAsStringAsync();
-            }
-            catch (Exception ex)
-            {
-                return $"Sập toàn tập: {ex.Message}";
-            }
+            _geo.SetRegionManually(khuVuc);
+            var result = await BookTripAsync(userId, diemDon, diemDen);
+            if (result.IsSuccess) return "Đặt xe thành công!";
+            if (result.IsReadOnlyMode) return result.ErrorMessage ?? "Server ở chế độ Read-Only.";
+            return result.ErrorMessage ?? "Lỗi không xác định.";
         }
     }
 }

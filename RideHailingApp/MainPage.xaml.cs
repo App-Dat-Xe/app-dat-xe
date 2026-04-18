@@ -18,8 +18,7 @@ public partial class MainPage : ContentPage
     private CancellationTokenSource _cts;
     private bool _isTracking = false;
     // Khai báo ApiService
-    private readonly RideHailingApp.Services.ApiService _apiService = new RideHailingApp.Services.ApiService();
-
+    private readonly RideHailingApp.Services.ApiService _apiService;
     // ── Mock: danh sách tài xế giả ──
     private readonly List<MockDriver> _mockDrivers = new()
     {
@@ -34,6 +33,7 @@ public partial class MainPage : ContentPage
     public MainPage()
     {
         InitializeComponent();
+        _apiService = MauiProgram.Services.GetRequiredService<RideHailingApp.Services.ApiService>();
         InitializeMap();
         UpdateServerStatusUI();
     }
