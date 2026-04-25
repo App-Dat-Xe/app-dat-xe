@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RideHailingApi.Data;
 using RideHailingApi.Middleware;
@@ -46,7 +47,8 @@ namespace RideHailingApi.Controllers
             }
         }
 
-        // PUT /api/users/{id} — cập nhật profile (chỉ Primary)
+        // PUT /api/users/{id} — Protected: yêu cầu JWT hợp lệ
+        [Authorize]
         [HttpPut("{id:int}")]
         public IActionResult UpdateProfile(int id, [FromBody] UpdateProfileRequest req)
         {

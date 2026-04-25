@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RideHailingApi.Data;
 using RideHailingApi.Middleware;
@@ -16,7 +17,8 @@ namespace RideHailingApi.Controllers
             _db = db;
         }
 
-        // POST /api/trips/book-trip — Region từ header X-Region (fallback Region trong body để tương thích)
+        // POST /api/trips/book-trip — Protected: yêu cầu JWT hợp lệ
+        [Authorize]
         [HttpPost("book-trip")]
         public IActionResult BookTrip([FromBody] TripRequest request)
         {

@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Tokens;
 using RideHailingApi.Data;
 using RideHailingApi.Middleware;
 using RideHailingApi.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace RideHailingApi.Controllers
 {
@@ -11,13 +15,15 @@ namespace RideHailingApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly DataConnect _db;
+        private readonly IConfiguration _config;
 
-        public AuthController(DataConnect db)
+        public AuthController(DataConnect db, IConfiguration config)
         {
             _db = db;
+            _config = config;
         }
 
-        // POST /api/auth/login — header X-Region xác định cụm DB
+        // POST /api/auth/login — Public endpoint, trả JWT khi đăng nhập thành công
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest req)
         {
@@ -37,18 +43,31 @@ namespace RideHailingApi.Controllers
                     });
 
                 if (table.Rows.Count == 0)
-                    return Unauthorized(new { error = "Sai UserName hoặc Password." });
+                    return Unauthorized(new { error = "Unauthorized", message = "Invalid credentials" });
 
                 var row = table.Rows[0];
-                var user = new UserDto
+                int userId = (int)row["UserID"];
+                string userName = row["UserName"].ToString() ?? "";
+                string registeredRegion = row["RegisteredRegion"].ToString() ?? region;
+
+                string token = GenerateJwt(userId, userName, registeredRegion);
+                int expiryMinutes = int.Parse(_config["JwtSettings:ExpiryMinutes"] ?? "15");
+
+                return Ok(new
                 {
-                    UserID = (int)row["UserID"],
-                    UserName = row["UserName"].ToString() ?? "",
-                    FullName = row["FullName"].ToString() ?? "",
-                    Phone = row["Phone"].ToString() ?? "",
-                    RegisteredRegion = row["RegisteredRegion"].ToString() ?? ""
-                };
-                return Ok(new { region, user });
+                    accessToken = token,
+                    tokenType = "Bearer",
+                    expiresIn = expiryMinutes * 60,
+                    user = new
+                    {
+                        id = userId,
+                        userName,
+                        fullName = row["FullName"].ToString() ?? "",
+                        phone = row["Phone"].ToString() ?? "",
+                        registeredRegion,
+                        roles = new[] { "USER" }
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -56,7 +75,7 @@ namespace RideHailingApi.Controllers
             }
         }
 
-        // POST /api/auth/register — Region được lưu vào RegisteredRegion (cố định cho user)
+        // POST /api/auth/register — Public endpoint
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterRequest req)
         {
@@ -81,7 +100,6 @@ namespace RideHailingApi.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                // Primary sập — không cho register
                 return StatusCode(503, new { error = ex.Message });
             }
             catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
@@ -92,6 +110,32 @@ namespace RideHailingApi.Controllers
             {
                 return StatusCode(500, new { error = ex.Message });
             }
+        }
+
+        private string GenerateJwt(int userId, string userName, string region)
+        {
+            var jwt = _config.GetSection("JwtSettings");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
+            int expiryMinutes = int.Parse(jwt["ExpiryMinutes"] ?? "15");
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+                new Claim(JwtRegisteredClaimNames.UniqueName, userName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("region", region),
+                new Claim(ClaimTypes.Role, "USER")
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: jwt["Issuer"],
+                audience: jwt["Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+                signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
