@@ -6,11 +6,13 @@ namespace RideHailingApi.Data
 {
     public class DataConnect
     {
-        private readonly DbConnectionFactory _factory;
+        private readonly DbConnectionFactory  _factory;
+        private readonly FailoverSimulator    _failover;
 
-        public DataConnect(DbConnectionFactory factory)
+        public DataConnect(DbConnectionFactory factory, FailoverSimulator failover)
         {
-            _factory = factory;
+            _factory  = factory;
+            _failover = failover;
         }
 
         // Thực thi INSERT trả về scalar (ví dụ SCOPE_IDENTITY()) vào Primary DB.
@@ -37,6 +39,11 @@ namespace RideHailingApi.Data
         // Ném ngoại lệ nếu Primary không khả dụng — không cho phép ghi vào Replica.
         public int ExecuteNonQuery(string region, string sql, Action<SqlCommand>? parameterizer = null)
         {
+            // Kiểm tra giả lập failover TRƯỚC khi thử kết nối thật
+            if (_failover.IsPrimaryDown(region))
+                throw new InvalidOperationException(
+                    $"[{region}] Primary đang bảo trì (giả lập). Không thể ghi dữ liệu vào Replica (Read-Only).");
+
             string connStr = _factory.GetConnectionString(region, isFailover: false);
             try
             {
@@ -53,59 +60,54 @@ namespace RideHailingApi.Data
             }
         }
 
-        // Thực thi câu lệnh trả về một giá trị đơn (COUNT, @@SERVERNAME, ...).
-        // Tự động chuyển sang Replica nếu Primary sập.
+        // ── READ (Scalar) ─────────────────────────────────────────────────────────
         public object? ExecuteScalar(string region, string sql, Action<SqlCommand>? parameterizer = null)
-        {
-            return ExecuteRead(region, sql, parameterizer, cmd => cmd.ExecuteScalar());
-        }
+            => ExecuteRead(region, sql, parameterizer, cmd => cmd.ExecuteScalar());
 
-        // Thực thi câu lệnh SELECT và trả về DataTable.
-        // Tự động chuyển sang Replica nếu Primary sập.
+        // ── READ (Table) ──────────────────────────────────────────────────────────
         public DataTable ExecuteReader(string region, string sql, Action<SqlCommand>? parameterizer = null)
-        {
-            return ExecuteRead(region, sql, parameterizer, cmd =>
+            => ExecuteRead(region, sql, parameterizer, cmd =>
             {
                 var table = new DataTable();
                 using var reader = cmd.ExecuteReader();
                 table.Load(reader);
                 return table;
             });
-        }
 
-        // Kiểm tra Primary có sống không (dùng cho endpoint /api/trips/health).
+        // ── HEALTH ────────────────────────────────────────────────────────────────
         public bool IsPrimaryAlive(string region)
         {
             try
             {
-                string connStr = _factory.GetConnectionString(region, isFailover: false);
-                using var conn = new SqlConnection(connStr);
+                using var conn = new SqlConnection(_factory.GetConnectionString(region, false));
                 conn.Open();
-                using var cmd = new SqlCommand("SELECT 1", conn);
-                cmd.ExecuteScalar();
+                new SqlCommand("SELECT 1", conn).ExecuteScalar();
                 return true;
             }
             catch { return false; }
         }
 
-        // Kiểm tra Replica có sống không.
         public bool IsReplicaAlive(string region)
         {
             try
             {
-                string connStr = _factory.GetConnectionString(region, isFailover: true);
-                using var conn = new SqlConnection(connStr);
+                using var conn = new SqlConnection(_factory.GetConnectionString(region, true));
                 conn.Open();
-                using var cmd = new SqlCommand("SELECT 1", conn);
-                cmd.ExecuteScalar();
+                new SqlCommand("SELECT 1", conn).ExecuteScalar();
                 return true;
             }
             catch { return false; }
         }
 
-        // Helper dùng chung cho mọi lệnh đọc: thử Primary trước, fallback Replica nếu sập.
-        private T ExecuteRead<T>(string region, string sql, Action<SqlCommand>? parameterizer, Func<SqlCommand, T> execute)
+        // ── PRIVATE HELPER ────────────────────────────────────────────────────────
+        // Thử Primary trước; nếu Primary giả lập sập HOẶC mất kết nối → Replica.
+        private T ExecuteRead<T>(string region, string sql,
+            Action<SqlCommand>? parameterizer, Func<SqlCommand, T> execute)
         {
+            // Giả lập failover → bỏ qua Primary, đọc thẳng Replica
+            if (_failover.IsPrimaryDown(region))
+                return ReadFromReplica(region, sql, parameterizer, execute);
+
             string primaryConn = _factory.GetConnectionString(region, isFailover: false);
             try
             {
@@ -117,14 +119,20 @@ namespace RideHailingApi.Data
             }
             catch (SqlException)
             {
-                // Primary sập → chuyển sang Replica (Read-Only fallback)
-                string replicaConn = _factory.GetConnectionString(region, isFailover: true);
-                using var fbConn = new SqlConnection(replicaConn);
-                fbConn.Open();
-                using var fbCmd = new SqlCommand(sql, fbConn);
-                parameterizer?.Invoke(fbCmd);
-                return execute(fbCmd);
+                // Primary thật sự sập → Replica
+                return ReadFromReplica(region, sql, parameterizer, execute);
             }
+        }
+
+        private T ReadFromReplica<T>(string region, string sql,
+            Action<SqlCommand>? parameterizer, Func<SqlCommand, T> execute)
+        {
+            string replicaConn = _factory.GetConnectionString(region, isFailover: true);
+            using var conn = new SqlConnection(replicaConn);
+            conn.Open();
+            using var cmd = new SqlCommand(sql, conn);
+            parameterizer?.Invoke(cmd);
+            return execute(cmd);
         }
     }
 }

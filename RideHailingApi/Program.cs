@@ -11,6 +11,7 @@ builder.WebHost.UseUrls("http://0.0.0.0:5108");
 
 builder.Services.AddControllers();
 builder.Services.AddSingleton<DbConnectionFactory>();
+builder.Services.AddSingleton<FailoverSimulator>();   // Singleton — giữ trạng thái xuyên suốt app
 builder.Services.AddScoped<DataConnect>();
 builder.Services.AddSignalR();
 
@@ -32,10 +33,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ClockSkew = TimeSpan.FromSeconds(60)
         };
-        // Chuẩn hoá response lỗi 401/403
         options.Events = new JwtBearerEvents
         {
-            // WebSocket không thể gắn Authorization header → SignalR đọc token từ query string
             OnMessageReceived = ctx =>
             {
                 var accessToken = ctx.Request.Query["access_token"];
@@ -61,10 +60,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
-
 builder.Services.AddAuthorization();
-
-// CORS — cho phép MAUI client gọi từ Android emulator / Windows desktop
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(p => p
@@ -72,19 +68,16 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod());
 });
-
 builder.Services.AddOpenApi();
-
 var app = builder.Build();
-
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
-
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
+app.UseStaticFiles();   // Phục vụ file tĩnh từ thư mục wwwroot (admin.html)
 app.UseCors();
-app.UseMiddleware<RegionMiddleware>();
-app.UseAuthentication();
+app.UseMiddleware<RegionMiddleware>();   // Đọc X-Region header trước khi vào controller
 app.UseAuthorization();
 app.MapControllers();
-app.MapHub<TripHub>("/hubs/trip");
+// Redirect /admin → /admin.html cho tiện
+app.MapGet("/admin", () => Results.Redirect("/admin.html"));
 app.Run();

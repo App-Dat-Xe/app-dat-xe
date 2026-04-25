@@ -5,7 +5,6 @@ using RideHailingApi.Data;
 using RideHailingApi.Hubs;
 using RideHailingApi.Middleware;
 using RideHailingApi.Models;
-
 namespace RideHailingApi.Controllers
 {
     [ApiController]
@@ -20,7 +19,6 @@ namespace RideHailingApi.Controllers
             _db = db;
             _hub = hub;
         }
-
         // POST /api/trips/book-trip — Protected: yêu cầu JWT hợp lệ
         [Authorize]
         [HttpPost("book-trip")]
@@ -44,11 +42,9 @@ namespace RideHailingApi.Controllers
                     });
 
                 int tripId = Convert.ToInt32(newId);
-
                 // Đẩy trạng thái "Pending" ngay lập tức tới group chuyến đi
                 await _hub.Clients.Group($"Trip_{tripId}")
                     .SendAsync("OnTripStatusChanged", "Pending", "Đang tìm tài xế cho bạn...");
-
                 // Thông báo tới pool tài xế trong cùng khu vực
                 await _hub.Clients.Group($"DriverPool_{region}")
                     .SendAsync("OnNewTripRequest", tripId, request.PickupLocation, request.DropoffLocation);
@@ -69,7 +65,6 @@ namespace RideHailingApi.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-
         // POST /api/trips/{tripId}/notify-status — Tài xế báo trạng thái chuyến (Accepted/Arrived/Completed)
         [Authorize]
         [HttpPost("{tripId:int}/notify-status")]
@@ -79,7 +74,6 @@ namespace RideHailingApi.Controllers
                 .SendAsync("OnTripStatusChanged", req.Status, req.Message);
             return Ok(new { sent = true });
         }
-
         // GET /api/trips/history/{userId} — lịch sử chuyến đi (có failover sang Replica)
         [HttpGet("history/{userId:int}")]
         public IActionResult GetHistory(int userId)
@@ -114,7 +108,6 @@ namespace RideHailingApi.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-
         // GET /api/trips/test-connection/{region} — kiểm tra kết nối DB của 1 region
         [HttpGet("test-connection/{region}")]
         public IActionResult TestDBconnection(string region)
@@ -215,7 +208,6 @@ namespace RideHailingApi.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-
         // POST /api/trips/{tripId}/arrive — tài xế đến điểm đón
         [Authorize]
         [HttpPost("{tripId:int}/arrive")]
