@@ -249,6 +249,7 @@ public partial class MainPage : ContentPage
                 "OK");
             return;
         }
+
         string dest = DestinationEntry.Text?.Trim();
         if (string.IsNullOrEmpty(dest))
         {
@@ -256,19 +257,37 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        await DisplayAlert("Đang xử lý...", "Đang kết nối với Server API...", "OK");
+        // Lấy userId thật từ session sau khi đăng nhập
+        int userId = Preferences.Get("userID", 0);
+        if (userId == 0)
+        {
+            await DisplayAlert("Chưa đăng nhập", "Vui lòng đăng nhập trước.", "OK");
+            return;
+        }
 
-        // --- GỌI API ĐẶT XE THẬT XUỐNG SQL SERVER ---
-        // Giả sử UserID = 1, Điểm đón là "Vị trí hiện tại", Khu vực là "South"
-        string ketQua = await _apiService.DatXeAsync(
-            userId: 1,
-            diemDon: "Vị trí hiện tại của khách",
-            diemDen: dest,
-            khuVuc: "South"
-        );
+        string pickup = string.IsNullOrEmpty(PickupEntry.Text) ? "Vị trí hiện tại" : PickupEntry.Text.Trim();
+        string region = Preferences.Get("currentRegion", "South");
 
-        // In kết quả từ Server ra màn hình
-        await DisplayAlert("Phản hồi từ Server", ketQua, "OK");
+        // Gọi API đặt xe thật
+        var result = await _apiService.BookTripAsync(userId, pickup, dest);
+
+        if (result.IsSuccess)
+        {
+            await DisplayAlert("Đặt xe thành công!",
+                $"Chuyến đi đã được ghi vào Server {region}.\nĐang tìm tài xế...", "OK");
+        }
+        else if (result.IsReadOnlyMode)
+        {
+            // Primary sập → cập nhật flag và refresh UI ngay
+            Preferences.Set("isReadOnly", true);
+            UpdateServerStatusUI();
+            await DisplayAlert("Không thể đặt xe",
+                "Server chính đang bảo trì.\nHệ thống chuyển sang chế độ Read-Only — bạn chỉ xem được lịch sử.", "OK");
+        }
+        else
+        {
+            await DisplayAlert("Lỗi", result.ErrorMessage ?? "Không thể kết nối server.", "OK");
+        }
     }
 
     private async void OnMyLocationClicked(object sender, EventArgs e)

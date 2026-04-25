@@ -57,6 +57,16 @@ namespace RideHailingApp.Services
         public DateTime? CreatedAt { get; set; }
     }
 
+    // Phản hồi từ GET /api/trips/health/{region}
+    public class HealthResponse
+    {
+        public string Region   { get; set; } = "";
+        public bool PrimaryOk  { get; set; }
+        public bool ReplicaOk  { get; set; }
+        public bool IsFailover { get; set; }
+        public string Message  { get; set; } = "";
+    }
+
     // Generic kết quả gọi API — phân biệt rõ các trạng thái cho client xử lý UI
     public class ApiResult<T>
     {

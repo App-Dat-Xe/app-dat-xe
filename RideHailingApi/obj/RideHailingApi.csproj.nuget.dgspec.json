@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj": {}
+    "C:\\Users\\khang\\source\\repos\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj": {
+    "C:\\Users\\khang\\source\\repos\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj",
+        "projectUniqueName": "C:\\Users\\khang\\source\\repos\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj",
         "projectName": "RideHailingApi",
-        "projectPath": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj",
-        "packagesPath": "C:\\Users\\lhnhan\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\obj\\",
+        "projectPath": "C:\\Users\\khang\\source\\repos\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj",
+        "packagesPath": "C:\\Users\\khang\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\khang\\source\\repos\\app-dat-xe\\RideHailingApi\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\lhnhan\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\khang\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
