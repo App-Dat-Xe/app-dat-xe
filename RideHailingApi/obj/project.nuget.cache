@@ -2,7 +2,7 @@
   "version": 2,
   "dgSpecHash": "3xTmwEEjmCI=",
   "success": true,
-  "projectFilePath": "C:\\Users\\khang\\source\\repos\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj",
+  "projectFilePath": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\lhnhan\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\10.0.7\\microsoft.aspnetcore.authentication.jwtbearer.10.0.7.nupkg.sha512",
     "C:\\Users\\lhnhan\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.5\\microsoft.aspnetcore.openapi.10.0.5.nupkg.sha512",

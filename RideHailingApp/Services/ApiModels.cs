@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace RideHailingApp.Services
 {
     public class LoginRequest
@@ -17,6 +19,7 @@ namespace RideHailingApp.Services
 
     public class UserDto
     {
+        [JsonPropertyName("id")]
         public int UserID { get; set; }
         public string UserName { get; set; } = "";
         public string FullName { get; set; } = "";
@@ -26,8 +29,14 @@ namespace RideHailingApp.Services
 
     public class LoginResponse
     {
-        public string Region { get; set; } = "";
+        public string AccessToken { get; set; } = "";
         public UserDto User { get; set; } = new();
+    }
+
+    public class BookingResponse
+    {
+        public int TripId { get; set; }
+        public string Message { get; set; } = "";
     }
 
     public class UpdateProfileRequest
@@ -65,6 +74,16 @@ namespace RideHailingApp.Services
         public bool ReplicaOk  { get; set; }
         public bool IsFailover { get; set; }
         public string Message  { get; set; } = "";
+    }
+
+    public class PendingTripItem
+    {
+        public int TripID { get; set; }
+        public int UserID { get; set; }
+        public string PickupLocation { get; set; } = "";
+        public string DropoffLocation { get; set; } = "";
+        public string Region { get; set; } = "";
+        public DateTime? CreatedAt { get; set; }
     }
 
     // Generic kết quả gọi API — phân biệt rõ các trạng thái cho client xử lý UI

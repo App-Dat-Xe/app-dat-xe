@@ -19,6 +19,8 @@ public partial class MainPage : ContentPage
     private bool _isTracking = false;
     // Khai báo ApiService
     private readonly RideHailingApp.Services.ApiService _apiService;
+    private readonly RideHailingApp.Services.TripHubService _hub;
+    private string? _activeTripId;
     // ── Mock: danh sách tài xế giả ──
     private readonly List<MockDriver> _mockDrivers = new()
     {
@@ -34,6 +36,11 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         _apiService = MauiProgram.Services.GetRequiredService<RideHailingApp.Services.ApiService>();
+        _hub        = MauiProgram.Services.GetRequiredService<RideHailingApp.Services.TripHubService>();
+
+        _hub.LocationUpdated    += OnDriverLocationUpdated;
+        _hub.TripStatusChanged  += OnTripStatusChanged;
+
         InitializeMap();
         UpdateServerStatusUI();
     }
@@ -177,6 +184,24 @@ public partial class MainPage : ContentPage
         _currentLocationLayer.Features = new List<IFeature> { feature };
         _currentLocationLayer.DataHasChanged();
     }
+    // ── SignalR handlers ──
+
+    private void OnDriverLocationUpdated(double lat, double lng)
+    {
+        UpdateUserLocationOnMap(lat, lng);
+    }
+
+    private async void OnTripStatusChanged(string status, string message)
+    {
+        await DisplayAlert("Cập nhật chuyến đi", message, "OK");
+
+        if (status == "Completed" && _activeTripId != null)
+        {
+            await _hub.LeaveTripGroupAsync(_activeTripId);
+            _activeTripId = null;
+        }
+    }
+
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
@@ -271,10 +296,23 @@ public partial class MainPage : ContentPage
         // Gọi API đặt xe thật
         var result = await _apiService.BookTripAsync(userId, pickup, dest);
 
-        if (result.IsSuccess)
+        if (result.IsSuccess && result.Data != null)
         {
+            _activeTripId = result.Data.TripId.ToString();
+
+            // Kết nối SignalR và tham gia group chuyến đi để nhận GPS + thông báo realtime
+            try
+            {
+                await _hub.StartAsync();
+                await _hub.JoinTripGroupAsync(_activeTripId);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SignalR connect error: {ex.Message}");
+            }
+
             await DisplayAlert("Đặt xe thành công!",
-                $"Chuyến đi đã được ghi vào Server {region}.\nĐang tìm tài xế...", "OK");
+                $"Chuyến đi #{_activeTripId} đã được ghi vào Server {region}.\nĐang tìm tài xế...", "OK");
         }
         else if (result.IsReadOnlyMode)
         {

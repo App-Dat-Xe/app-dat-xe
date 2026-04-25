@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using RideHailingApi.Data;
+using RideHailingApi.Hubs;
 using RideHailingApi.Middleware;
 using RideHailingApi.Models;
 
@@ -11,16 +13,18 @@ namespace RideHailingApi.Controllers
     public class TripsController : ControllerBase
     {
         private readonly DataConnect _db;
+        private readonly IHubContext<TripHub> _hub;
 
-        public TripsController(DataConnect db)
+        public TripsController(DataConnect db, IHubContext<TripHub> hub)
         {
             _db = db;
+            _hub = hub;
         }
 
         // POST /api/trips/book-trip — Protected: yêu cầu JWT hợp lệ
         [Authorize]
         [HttpPost("book-trip")]
-        public IActionResult BookTrip([FromBody] TripRequest request)
+        public async Task<IActionResult> BookTrip([FromBody] TripRequest request)
         {
             string region = HttpContext.GetRegion();
             if (!string.IsNullOrWhiteSpace(request.Region))
@@ -28,9 +32,9 @@ namespace RideHailingApi.Controllers
 
             try
             {
-                _db.ExecuteNonQuery(region,
+                var newId = _db.ExecuteScalarWrite(region,
                     "INSERT INTO Trips (UserID, PickupLocation, DropoffLocation, Region, Status) " +
-                    "VALUES (@Uid, @Pick, @Drop, @Reg, 'Pending')",
+                    "VALUES (@Uid, @Pick, @Drop, @Reg, 'Pending'); SELECT SCOPE_IDENTITY();",
                     cmd =>
                     {
                         cmd.Parameters.AddWithValue("@Uid", request.UserID);
@@ -38,7 +42,18 @@ namespace RideHailingApi.Controllers
                         cmd.Parameters.AddWithValue("@Drop", request.DropoffLocation);
                         cmd.Parameters.AddWithValue("@Reg", region);
                     });
-                return Ok(new { message = $"Đặt xe thành công tại Server Chính ({region})" });
+
+                int tripId = Convert.ToInt32(newId);
+
+                // Đẩy trạng thái "Pending" ngay lập tức tới group chuyến đi
+                await _hub.Clients.Group($"Trip_{tripId}")
+                    .SendAsync("OnTripStatusChanged", "Pending", "Đang tìm tài xế cho bạn...");
+
+                // Thông báo tới pool tài xế trong cùng khu vực
+                await _hub.Clients.Group($"DriverPool_{region}")
+                    .SendAsync("OnNewTripRequest", tripId, request.PickupLocation, request.DropoffLocation);
+
+                return Ok(new { tripId, message = $"Đặt xe thành công tại Server Chính ({region})" });
             }
             catch (InvalidOperationException)
             {
@@ -53,6 +68,16 @@ namespace RideHailingApi.Controllers
             {
                 return StatusCode(500, new { error = ex.Message });
             }
+        }
+
+        // POST /api/trips/{tripId}/notify-status — Tài xế báo trạng thái chuyến (Accepted/Arrived/Completed)
+        [Authorize]
+        [HttpPost("{tripId:int}/notify-status")]
+        public async Task<IActionResult> NotifyTripStatus(int tripId, [FromBody] TripStatusRequest req)
+        {
+            await _hub.Clients.Group($"Trip_{tripId}")
+                .SendAsync("OnTripStatusChanged", req.Status, req.Message);
+            return Ok(new { sent = true });
         }
 
         // GET /api/trips/history/{userId} — lịch sử chuyến đi (có failover sang Replica)
@@ -113,6 +138,135 @@ namespace RideHailingApi.Controllers
                     KhuVuc    = region,
                     LoiNhan   = $"Không thể kết nối đến SQL Server: {ex.Message}"
                 });
+            }
+        }
+
+        // GET /api/trips/pending/{region} — tài xế lấy danh sách cuốc đang chờ
+        [Authorize]
+        [HttpGet("pending/{region}")]
+        public IActionResult GetPendingTrips(string region)
+        {
+            try
+            {
+                var table = _db.ExecuteReader(region,
+                    "SELECT TripID, UserID, PickupLocation, DropoffLocation, Region, CreatedAt " +
+                    "FROM Trips WHERE Status='Pending' AND Region=@region ORDER BY CreatedAt DESC",
+                    cmd => cmd.Parameters.AddWithValue("@region", region));
+
+                var trips = new List<PendingTripItem>();
+                foreach (System.Data.DataRow row in table.Rows)
+                {
+                    trips.Add(new PendingTripItem
+                    {
+                        TripID          = (int)row["TripID"],
+                        UserID          = (int)row["UserID"],
+                        PickupLocation  = row["PickupLocation"].ToString() ?? "",
+                        DropoffLocation = row["DropoffLocation"].ToString() ?? "",
+                        Region          = row["Region"].ToString() ?? "",
+                        CreatedAt       = row["CreatedAt"] is DBNull ? null : (DateTime?)row["CreatedAt"]
+                    });
+                }
+                return Ok(trips);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // POST /api/trips/{tripId}/accept — tài xế nhận cuốc
+        [Authorize]
+        [HttpPost("{tripId:int}/accept")]
+        public async Task<IActionResult> AcceptTrip(int tripId)
+        {
+            string region = HttpContext.GetRegion();
+            var subClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                        ?? User.FindFirst("sub")?.Value;
+            int driverId = int.Parse(subClaim ?? "0");
+            string driverName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                             ?? User.FindFirst("unique_name")?.Value ?? "Tài xế";
+
+            try
+            {
+                int rows = _db.ExecuteNonQuery(region,
+                    "UPDATE Trips SET Status='Accepted', DriverID=@driverId " +
+                    "WHERE TripID=@tripId AND Status='Pending'",
+                    cmd =>
+                    {
+                        cmd.Parameters.AddWithValue("@driverId", driverId);
+                        cmd.Parameters.AddWithValue("@tripId", tripId);
+                    });
+
+                if (rows == 0)
+                    return Conflict(new { error = "Chuyến đi đã được nhận bởi tài xế khác." });
+
+                await _hub.Clients.Group($"Trip_{tripId}")
+                    .SendAsync("OnTripStatusChanged", "Accepted",
+                        $"Tài xế {driverName} đã nhận chuyến của bạn!");
+
+                return Ok(new { accepted = true, driverId, driverName });
+            }
+            catch (InvalidOperationException)
+            {
+                return StatusCode(503, new { error = "Server Chính đang bảo trì." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // POST /api/trips/{tripId}/arrive — tài xế đến điểm đón
+        [Authorize]
+        [HttpPost("{tripId:int}/arrive")]
+        public async Task<IActionResult> ArriveAtPickup(int tripId)
+        {
+            string region = HttpContext.GetRegion();
+            try
+            {
+                _db.ExecuteNonQuery(region,
+                    "UPDATE Trips SET Status='Arrived' WHERE TripID=@tripId",
+                    cmd => cmd.Parameters.AddWithValue("@tripId", tripId));
+
+                await _hub.Clients.Group($"Trip_{tripId}")
+                    .SendAsync("OnTripStatusChanged", "Arrived", "Tài xế đã đến điểm đón!");
+
+                return Ok(new { arrived = true });
+            }
+            catch (InvalidOperationException)
+            {
+                return StatusCode(503, new { error = "Server Chính đang bảo trì." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // POST /api/trips/{tripId}/complete — hoàn thành chuyến
+        [Authorize]
+        [HttpPost("{tripId:int}/complete")]
+        public async Task<IActionResult> CompleteTrip(int tripId)
+        {
+            string region = HttpContext.GetRegion();
+            try
+            {
+                _db.ExecuteNonQuery(region,
+                    "UPDATE Trips SET Status='Completed' WHERE TripID=@tripId",
+                    cmd => cmd.Parameters.AddWithValue("@tripId", tripId));
+
+                await _hub.Clients.Group($"Trip_{tripId}")
+                    .SendAsync("OnTripStatusChanged", "Completed", "Chuyến đi hoàn thành. Cảm ơn bạn!");
+
+                return Ok(new { completed = true });
+            }
+            catch (InvalidOperationException)
+            {
+                return StatusCode(503, new { error = "Server Chính đang bảo trì." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
             }
         }
 

@@ -10,6 +10,7 @@ namespace RideHailingApp.Services
     {
         private readonly HttpClient _httpClient;
         private readonly GeoLocatorService _geo;
+        private string? _jwtToken;
 
         public ApiService(GeoLocatorService geo)
         {
@@ -26,10 +27,20 @@ namespace RideHailingApp.Services
             };
 
             string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
-                ? "http://10.0.2.2:5108"    // Android emulator
+                ? "http://192.168.1.45:5108"    // IP Wi-Fi máy tính của bạn
                 : "https://localhost:7285";  // Windows desktop
             _httpClient.BaseAddress = new Uri(baseUrl);
         }
+
+        // ───────────────── Token Management ─────────────────
+
+        public void SetToken(string token)
+        {
+            _jwtToken = token;
+            Preferences.Set("jwtToken", token);
+        }
+
+        public string? GetToken() => _jwtToken ?? Preferences.Get("jwtToken", (string?)null);
 
         // ───────────────── Helpers ─────────────────
 
@@ -37,6 +48,9 @@ namespace RideHailingApp.Services
         {
             var req = new HttpRequestMessage(method, path);
             req.Headers.Add("X-Region", _geo.GetCachedRegion());
+            var token = GetToken();
+            if (!string.IsNullOrEmpty(token))
+                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             if (body != null)
                 req.Content = JsonContent.Create(body);
             return req;
@@ -103,23 +117,49 @@ namespace RideHailingApp.Services
 
         // ───────────────── Trips ─────────────────
 
-        public Task<ApiResult<object>> BookTripAsync(int userId, string pickup, string dropoff)
+        public Task<ApiResult<BookingResponse>> BookTripAsync(int userId, string pickup, string dropoff)
         {
             var body = new TripBookingRequest
             {
-                UserID        = userId,
+                UserID          = userId,
                 PickupLocation  = pickup,
                 DropoffLocation = dropoff,
-                Region        = _geo.GetCachedRegion()
+                Region          = _geo.GetCachedRegion()
             };
             var req = BuildRequest(HttpMethod.Post, "/api/trips/book-trip", body);
-            return SendAsync<object>(req);
+            return SendAsync<BookingResponse>(req);
         }
 
         public Task<ApiResult<List<TripHistoryItem>>> GetTripHistoryAsync(int userId)
         {
             var req = BuildRequest(HttpMethod.Get, $"/api/trips/history/{userId}");
             return SendAsync<List<TripHistoryItem>>(req);
+        }
+
+        // ───────────────── Driver Trips ─────────────────
+
+        public Task<ApiResult<List<PendingTripItem>>> GetPendingTripsAsync(string region)
+        {
+            var req = BuildRequest(HttpMethod.Get, $"/api/trips/pending/{region}");
+            return SendAsync<List<PendingTripItem>>(req);
+        }
+
+        public Task<ApiResult<object>> AcceptTripAsync(int tripId)
+        {
+            var req = BuildRequest(HttpMethod.Post, $"/api/trips/{tripId}/accept");
+            return SendAsync<object>(req);
+        }
+
+        public Task<ApiResult<object>> ArriveTripAsync(int tripId)
+        {
+            var req = BuildRequest(HttpMethod.Post, $"/api/trips/{tripId}/arrive");
+            return SendAsync<object>(req);
+        }
+
+        public Task<ApiResult<object>> CompleteTripAsync(int tripId)
+        {
+            var req = BuildRequest(HttpMethod.Post, $"/api/trips/{tripId}/complete");
+            return SendAsync<object>(req);
         }
 
         // ───────────────── Health check ─────────────────
@@ -161,7 +201,7 @@ namespace RideHailingApp.Services
             }
         }
 
-        // Giữ method cũ để không phá MainPage.OnFindDriverClicked
+        // Legacy method — giữ để không phá code cũ
         public async Task<string> DatXeAsync(int userId, string diemDon, string diemDen, string khuVuc)
         {
             _geo.SetRegionManually(khuVuc);

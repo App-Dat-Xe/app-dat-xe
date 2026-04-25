@@ -2,14 +2,17 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using RideHailingApi.Data;
+using RideHailingApi.Hubs;
 using RideHailingApi.Middleware;
 using RideHailingApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://0.0.0.0:5108");
 
 builder.Services.AddControllers();
 builder.Services.AddSingleton<DbConnectionFactory>();
 builder.Services.AddScoped<DataConnect>();
+builder.Services.AddSignalR();
 
 // JWT Authentication
 var jwt = builder.Configuration.GetSection("JwtSettings");
@@ -32,6 +35,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         // Chuẩn hoá response lỗi 401/403
         options.Events = new JwtBearerEvents
         {
+            // WebSocket không thể gắn Authorization header → SignalR đọc token từ query string
+            OnMessageReceived = ctx =>
+            {
+                var accessToken = ctx.Request.Query["access_token"];
+                var path = ctx.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    ctx.Token = accessToken;
+                return Task.CompletedTask;
+            },
             OnChallenge = ctx =>
             {
                 ctx.HandleResponse();
@@ -68,10 +80,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseCors();
 app.UseMiddleware<RegionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<TripHub>("/hubs/trip");
 app.Run();

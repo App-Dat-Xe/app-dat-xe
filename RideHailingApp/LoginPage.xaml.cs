@@ -69,6 +69,7 @@ public partial class LoginPage : ContentPage
 
         if (result.IsSuccess && result.Data != null)
         {
+            _apiService.SetToken(result.Data.AccessToken);
             Preferences.Set("isLoggedIn",  true);
             Preferences.Set("userID",      result.Data.User.UserID);
             Preferences.Set("userEmail",   result.Data.User.UserName);
@@ -78,14 +79,21 @@ public partial class LoginPage : ContentPage
             // Health-check: tự động phát hiện Primary còn sống không → set isReadOnly
             await _apiService.CheckAndSetReadOnlyAsync();
 
-            Application.Current.MainPage = new AppShell();
+            bool isDriver = DriverModeSwitch.IsToggled;
+            Preferences.Set("isDriver", isDriver);
+            if (isDriver)
+                Application.Current!.MainPage = new DriverShell();
+            else
+                Application.Current!.MainPage = new AppShell();
         }
         else if (result.IsReadOnlyMode)
         {
             // Primary sập ngay cả login — vào app chế độ Read-Only
             Preferences.Set("isReadOnly", true);
             ReadOnlyBanner.IsVisible = true;
-            Application.Current.MainPage = new AppShell();
+            bool isDriver = DriverModeSwitch.IsToggled;
+            Preferences.Set("isDriver", isDriver);
+            Application.Current!.MainPage = isDriver ? new DriverShell() : new AppShell();
         }
         else
         {

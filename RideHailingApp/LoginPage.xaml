@@ -152,6 +152,18 @@
                     <BoxView HeightRequest="1" WidthRequest="80" BackgroundColor="#2E3348" VerticalOptions="Center"/>
                 </HorizontalStackLayout>
 
+                <!-- Toggle vai trò tài xế -->
+                <Border BackgroundColor="#13161F" StrokeThickness="1" Stroke="#2E3348" Padding="14,12">
+                    <Border.StrokeShape><RoundRectangle CornerRadius="10"/></Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Đăng nhập với tư cách Tài xế" TextColor="White" FontSize="14"/>
+                            <Label Text="Bật để truy cập giao diện tài xế" TextColor="#4A5068" FontSize="11"/>
+                        </VerticalStackLayout>
+                        <Switch x:Name="DriverModeSwitch" Grid.Column="1" OnColor="#00C853" ThumbColor="White" VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
                 <!-- Thông tin server đang kết nối + Picker chọn thủ công -->
                 <Border BackgroundColor="#13161F"
                         StrokeThickness="1"

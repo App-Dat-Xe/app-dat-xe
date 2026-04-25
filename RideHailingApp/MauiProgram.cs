@@ -23,6 +23,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<GeoLocatorService>();
         builder.Services.AddSingleton<SessionService>();
         builder.Services.AddSingleton<ApiService>();
+        builder.Services.AddSingleton<TripHubService>();
         var app = builder.Build();
         Services = app.Services;
         return app;

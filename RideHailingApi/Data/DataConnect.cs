@@ -13,6 +13,26 @@ namespace RideHailingApi.Data
             _factory = factory;
         }
 
+        // Thực thi INSERT trả về scalar (ví dụ SCOPE_IDENTITY()) vào Primary DB.
+        // Ném ngoại lệ nếu Primary không khả dụng.
+        public object? ExecuteScalarWrite(string region, string sql, Action<SqlCommand>? parameterizer = null)
+        {
+            string connStr = _factory.GetConnectionString(region, isFailover: false);
+            try
+            {
+                using var conn = new SqlConnection(connStr);
+                conn.Open();
+                using var cmd = new SqlCommand(sql, conn);
+                parameterizer?.Invoke(cmd);
+                return cmd.ExecuteScalar();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(
+                    $"[{region}] Server Chính không khả dụng. Không thể ghi dữ liệu vào Replica (Read-Only).", ex);
+            }
+        }
+
         // Thực thi ghi (INSERT/UPDATE/DELETE) vào Primary DB.
         // Ném ngoại lệ nếu Primary không khả dụng — không cho phép ghi vào Replica.
         public int ExecuteNonQuery(string region, string sql, Action<SqlCommand>? parameterizer = null)
