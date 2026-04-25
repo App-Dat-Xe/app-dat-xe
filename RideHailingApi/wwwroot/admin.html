@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RideNow — Admin Failover Dashboard</title>
+<style>
+:root {
+  --bg: #0F1117; --card: #1C1F2E; --card2: #13161F;
+  --border: #2E3348; --green: #00C853; --red: #FF5252;
+  --yellow: #FFC107; --blue: #2196F3; --muted: #8A8FA3;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+/* ── HEADER ── */
+header {
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 14px 32px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+header h1 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+header h1 span { color: var(--green); }
+.pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:.25 } }
+.refresh-btn {
+  background: #2E3348; color: #fff; border: none; padding: 7px 16px;
+  border-radius: 8px; cursor: pointer; font-size: 13px; transition: background .15s;
+}
+.refresh-btn:hover { background: #3E4568; }
+.refresh-info { font-size: 12px; color: var(--muted); margin-right: 10px; }
+
+/* ── LAYOUT ── */
+main { max-width: 1080px; margin: 0 auto; padding: 28px 20px; }
+section { margin-bottom: 30px; }
+.section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+}
+
+/* ── MODE BADGES ── */
+.mode-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+.mode-badge {
+  font-size: 12px; font-weight: 700; padding: 5px 14px;
+  border-radius: 20px; border: 1px solid; display: flex; align-items: center; gap: 6px;
+}
+.mode-ok   { background: #0D2E1A; color: var(--green); border-color: #00C85366; }
+.mode-fail { background: #2A2200; color: var(--yellow); border-color: #FFC10766; }
+
+/* ── SERVER GRID ── */
+.server-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+@media(max-width:900px){ .server-grid { grid-template-columns: 1fr 1fr; } }
+.server-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px; transition: border-color .2s;
+}
+.server-card.state-down { border-color: var(--red); }
+.server-card.state-active { border-color: var(--green); }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.card-name { font-size: 14px; font-weight: 700; }
+.badge {
+  font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+  letter-spacing: .5px;
+}
+.badge-p { background: #0D2E1A; color: var(--green); }
+.badge-r { background: #1A2035; color: #6C8EBF; }
+
+.status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 13px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dot-g { background: var(--green); box-shadow: 0 0 5px #00C853aa; }
+.dot-r { background: var(--red);   box-shadow: 0 0 5px #FF5252aa; }
+.dot-y { background: var(--yellow); }
+.chip {
+  display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 6px;
+}
+.chip-warn  { background: #2A2200; color: var(--yellow); }
+.chip-ok    { background: #0D2E1A; color: var(--green); }
+.chip-ro    { background: #1A1F35; color: #6C8EBF; }
+
+.toggle-btn {
+  width: 100%; margin-top: 14px; padding: 9px; border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity .15s, transform .1s;
+}
+.toggle-btn:active { transform: scale(.97); }
+.toggle-btn:disabled { opacity: .35; cursor: not-allowed; }
+.btn-red   { background: var(--red);   color: #fff; }
+.btn-green { background: var(--green); color: #111; }
+
+/* ── TEST SECTION ── */
+.test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media(max-width:700px){ .test-grid { grid-template-columns: 1fr; } }
+.test-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px;
+}
+.test-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.test-card p  { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
+.btn-row { display: flex; gap: 10px; }
+.test-btn {
+  flex: 1; padding: 10px; border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity .15s;
+}
+.test-btn:active { opacity: .7; }
+.test-btn:disabled { opacity: .35; cursor: not-allowed; }
+.btn-write { background: var(--red);  color: #fff; }
+.btn-read  { background: var(--blue); color: #fff; }
+
+.result {
+  margin-top: 12px; padding: 11px 14px; border-radius: 10px;
+  background: var(--card2); font-size: 12px; line-height: 1.7;
+  white-space: pre-wrap; display: none;
+}
+.result.show { display: block; }
+.r-ok   { color: var(--green); }
+.r-warn { color: var(--yellow); }
+.r-err  { color: var(--red); }
+
+/* ── LOG ── */
+.log-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  max-height: 300px; overflow-y: auto;
+}
+.log-row {
+  display: grid; grid-template-columns: 76px 72px 1fr;
+  gap: 12px; padding: 9px 18px; border-bottom: 1px solid var(--border);
+  font-size: 12px; align-items: center;
+}
+.log-row:last-child { border-bottom: none; }
+.log-time { color: var(--muted); font-family: monospace; }
+.log-reg  { font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 4px; text-align: center; }
+.reg-south { background: #2D1020; color: #F48FB1; }
+.reg-north { background: #102030; color: #81D4FA; }
+.log-msg  { color: #C8CDDC; }
+.log-empty { padding: 28px; text-align: center; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><div class="pulse"></div>🚗 <span>RideNow</span> &nbsp;Admin — Failover Dashboard</h1>
+  <div style="display:flex;align-items:center">
+    <span class="refresh-info" id="timerLabel">Auto-refresh 3s</span>
+    <button class="refresh-btn" onclick="fetchStatus()">⟳ Refresh ngay</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Mode badges -->
+  <div class="mode-row" id="modeBadges">
+    <span class="mode-badge mode-ok"><span>●</span> Đang tải...</span>
+  </div>
+
+  <!-- 1. Server status -->
+  <section>
+    <div class="section-title">📡 Trạng thái máy chủ</div>
+    <div class="server-grid" id="serverGrid">
+      <div class="server-card" style="color:var(--muted);text-align:center;grid-column:span 4">Đang kết nối...</div>
+    </div>
+  </section>
+
+  <!-- 2. Test read/write -->
+  <section>
+    <div class="section-title">🔬 Kiểm tra Read / Write</div>
+    <div class="test-grid">
+
+      <div class="test-card">
+        <h3>🏙 Miền Nam &nbsp;<small style="color:var(--muted);font-weight:400;font-size:12px">(South)</small></h3>
+        <p>Thử <b>Ghi</b> → thất bại khi Primary sập (503).<br>
+           Thử <b>Đọc</b> → vẫn thành công từ Replica ✅</p>
+        <div class="btn-row">
+          <button class="test-btn btn-write" onclick="testWrite('South')">✏ Test Ghi</button>
+          <button class="test-btn btn-read"  onclick="testRead('South')">📖 Test Đọc</button>
+        </div>
+        <div class="result" id="res-South"></div>
+      </div>
+
+      <div class="test-card">
+        <h3>🏔 Miền Bắc &nbsp;<small style="color:var(--muted);font-weight:400;font-size:12px">(North)</small></h3>
+        <p>Thử <b>Ghi</b> → thất bại khi Primary sập (503).<br>
+           Thử <b>Đọc</b> → vẫn thành công từ Replica ✅</p>
+        <div class="btn-row">
+          <button class="test-btn btn-write" onclick="testWrite('North')">✏ Test Ghi</button>
+          <button class="test-btn btn-read"  onclick="testRead('North')">📖 Test Đọc</button>
+        </div>
+        <div class="result" id="res-North"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 3. Event log -->
+  <section>
+    <div class="section-title">📋 Event Log</div>
+    <div class="log-box" id="logBox">
+      <div class="log-empty">Chưa có sự kiện...</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ── fetch status ──────────────────────────────────────────────
+async function fetchStatus() {
+  try {
+    const r = await fetch('/api/admin/status');
+    const d = await r.json();
+    renderBadges(d.servers);
+    renderGrid(d.servers);
+    renderLog(d.logs);
+  } catch(e) {
+    console.warn('fetch error', e);
+  }
+}
+
+// ── mode badges ───────────────────────────────────────────────
+function renderBadges(servers) {
+  document.getElementById('modeBadges').innerHTML = servers.map(s => {
+    const down = s.primarySimulated || !s.primaryReal;
+    return `<span class="mode-badge ${down ? 'mode-fail' : 'mode-ok'}">
+      ${down ? '⚠' : '●'}
+      ${s.region}: ${down ? 'FAILOVER — đang dùng Replica' : 'Bình thường (Primary)'}
+    </span>`;
+  }).join('');
+}
+
+// ── server grid ───────────────────────────────────────────────
+function renderGrid(servers) {
+  let html = '';
+  for (const s of servers) {
+    const pDown = s.primarySimulated || !s.primaryReal;
+
+    // Primary card
+    html += `
+    <div class="server-card ${pDown ? 'state-down' : 'state-active'}">
+      <div class="card-top">
+        <span class="card-name">${s.region} Primary</span>
+        <span class="badge badge-p">PRIMARY</span>
+      </div>
+
+      <div class="status-row">
+        <div class="dot ${s.primaryReal ? 'dot-g' : 'dot-r'}"></div>
+        <span>DB thực: ${s.primaryReal ? 'Kết nối OK' : 'Không phản hồi'}</span>
+      </div>
+      <div class="status-row">
+        <div class="dot ${s.primarySimulated ? 'dot-r' : 'dot-g'}"></div>
+        <span>Giả lập: ${s.primarySimulated ? 'Đang SẬP' : 'Hoạt động'}</span>
+      </div>
+      ${pDown
+        ? '<span class="chip chip-warn">⚠ App đang dùng Replica</span>'
+        : '<span class="chip chip-ok">✅ Đang phục vụ bình thường</span>'}
+
+      <button class="toggle-btn ${s.primarySimulated ? 'btn-green' : 'btn-red'}"
+              onclick="togglePrimary('${s.region}', ${s.primarySimulated})">
+        ${s.primarySimulated ? '✅ Khôi phục Primary' : '🔴 Giả lập Primary Sập'}
+      </button>
+    </div>`;
+
+    // Replica card
+    html += `
+    <div class="server-card ${pDown ? 'state-active' : ''}">
+      <div class="card-top">
+        <span class="card-name">${s.region} Replica</span>
+        <span class="badge badge-r">REPLICA</span>
+      </div>
+
+      <div class="status-row">
+        <div class="dot ${s.replicaReal ? 'dot-g' : 'dot-r'}"></div>
+        <span>DB thực: ${s.replicaReal ? 'Kết nối OK' : 'Không phản hồi'}</span>
+      </div>
+      <div class="status-row">
+        <div class="dot dot-y"></div>
+        <span>Chế độ: Read-Only</span>
+      </div>
+      ${pDown
+        ? '<span class="chip chip-ok">🟢 Đang phục vụ thay Primary</span>'
+        : '<span class="chip chip-ro">⏸ Standby (chờ failover)</span>'}
+    </div>`;
+  }
+  document.getElementById('serverGrid').innerHTML = html;
+}
+
+// ── toggle primary ────────────────────────────────────────────
+async function togglePrimary(region, isDown) {
+  const action = isDown ? 'simulate-up' : 'simulate-down';
+  await fetch(`/api/admin/${action}/${region}`, { method: 'POST' });
+  await fetchStatus();
+}
+
+// ── test write ────────────────────────────────────────────────
+async function testWrite(region) {
+  const box = show(region, 'r-warn', '⏳ Đang thực hiện GHI vào Primary...');
+  const res = await fetch(`/api/admin/test-write/${region}`, { method: 'POST' });
+  const d   = await res.json();
+  if (res.ok) {
+    show(region, 'r-ok',
+      `✅ GHI THÀNH CÔNG\n→ Nguồn: ${d.source}\n→ ${d.message}`);
+  } else {
+    show(region, 'r-err',
+      `❌ GHI THẤT BẠI (HTTP ${res.status})\n→ Primary không khả dụng\n→ ${d.message}`);
+  }
+  await fetchStatus();
+}
+
+// ── test read ─────────────────────────────────────────────────
+async function testRead(region) {
+  show(region, 'r-warn', '⏳ Đang thực hiện ĐỌC...');
+  const res = await fetch(`/api/admin/test-read/${region}`);
+  const d   = await res.json();
+  if (res.ok) {
+    const isReplica = d.source === 'Replica';
+    show(region,
+      isReplica ? 'r-warn' : 'r-ok',
+      `${isReplica ? '⚠ ĐỌC TỪ REPLICA (Failover)' : '✅ ĐỌC TỪ PRIMARY'}\n→ Nguồn: ${d.source}\n→ ${d.rowCount} chuyến đi gần nhất`
+    );
+  } else {
+    show(region, 'r-err', `❌ ĐỌC THẤT BẠI\n→ ${d.message}`);
+  }
+  await fetchStatus();
+}
+
+function show(region, cls, text) {
+  const el = document.getElementById(`res-${region}`);
+  el.className = `result show ${cls}`;
+  el.textContent = text;
+  return el;
+}
+
+// ── event log ─────────────────────────────────────────────────
+function renderLog(logs) {
+  const box = document.getElementById('logBox');
+  if (!logs || !logs.length) {
+    box.innerHTML = '<div class="log-empty">Chưa có sự kiện...</div>';
+    return;
+  }
+  box.innerHTML = logs.map(l => {
+    const t = new Date(l.time).toLocaleTimeString('vi-VN');
+    const rCls = l.region.toLowerCase() === 'south' ? 'reg-south' : 'reg-north';
+    return `<div class="log-row">
+      <span class="log-time">${t}</span>
+      <span class="log-reg ${rCls}">${l.region}</span>
+      <span class="log-msg">${l.message}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── auto refresh ──────────────────────────────────────────────
+fetchStatus();
+setInterval(fetchStatus, 3000);
+
+let cd = 3;
+setInterval(() => {
+  cd = cd <= 1 ? 3 : cd - 1;
+  document.getElementById('timerLabel').textContent = `Auto-refresh ${cd}s &nbsp;`;
+}, 1000);
+</script>
+</body>
+</html>
