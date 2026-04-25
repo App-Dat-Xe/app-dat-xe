@@ -53,6 +53,36 @@ namespace RideHailingApi.Data
             });
         }
 
+        // Kiểm tra Primary có sống không (dùng cho endpoint /api/trips/health).
+        public bool IsPrimaryAlive(string region)
+        {
+            try
+            {
+                string connStr = _factory.GetConnectionString(region, isFailover: false);
+                using var conn = new SqlConnection(connStr);
+                conn.Open();
+                using var cmd = new SqlCommand("SELECT 1", conn);
+                cmd.ExecuteScalar();
+                return true;
+            }
+            catch { return false; }
+        }
+
+        // Kiểm tra Replica có sống không.
+        public bool IsReplicaAlive(string region)
+        {
+            try
+            {
+                string connStr = _factory.GetConnectionString(region, isFailover: true);
+                using var conn = new SqlConnection(connStr);
+                conn.Open();
+                using var cmd = new SqlCommand("SELECT 1", conn);
+                cmd.ExecuteScalar();
+                return true;
+            }
+            catch { return false; }
+        }
+
         // Helper dùng chung cho mọi lệnh đọc: thử Primary trước, fallback Replica nếu sập.
         private T ExecuteRead<T>(string region, string sql, Action<SqlCommand>? parameterizer, Func<SqlCommand, T> execute)
         {

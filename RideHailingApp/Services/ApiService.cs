@@ -26,8 +26,8 @@ namespace RideHailingApp.Services
             };
 
             string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
-                ? "https://10.0.2.2:7285"   // Android emulator → host loopback
-                : "https://localhost:7285"; // Windows / iOS simulator
+                ? "http://10.0.2.2:5108"    // Android emulator
+                : "https://localhost:7285";  // Windows desktop
             _httpClient.BaseAddress = new Uri(baseUrl);
         }
 
@@ -56,7 +56,6 @@ namespace RideHailingApp.Services
 
                 if (resp.StatusCode == HttpStatusCode.ServiceUnavailable)
                 {
-                    var msg = await resp.Content.ReadAsStringAsync();
                     return ApiResult<T>.ReadOnly("Hệ thống đang ở chế độ Read-Only (Server Chính bảo trì).");
                 }
 
@@ -108,10 +107,10 @@ namespace RideHailingApp.Services
         {
             var body = new TripBookingRequest
             {
-                UserID = userId,
-                PickupLocation = pickup,
+                UserID        = userId,
+                PickupLocation  = pickup,
                 DropoffLocation = dropoff,
-                Region = _geo.GetCachedRegion()
+                Region        = _geo.GetCachedRegion()
             };
             var req = BuildRequest(HttpMethod.Post, "/api/trips/book-trip", body);
             return SendAsync<object>(req);
@@ -124,6 +123,28 @@ namespace RideHailingApp.Services
         }
 
         // ───────────────── Health check ─────────────────
+
+        // Kiểm tra Primary còn sống không → tự động cập nhật Preferences["isReadOnly"].
+        // Gọi ngay sau khi đăng nhập để app biết trạng thái ngay từ đầu.
+        public async Task<bool> CheckAndSetReadOnlyAsync()
+        {
+            string region = _geo.GetCachedRegion();
+            try
+            {
+                var resp = await _httpClient.GetAsync($"/api/trips/health/{region}");
+                if (!resp.IsSuccessStatusCode) return false;
+
+                var body = await resp.Content.ReadFromJsonAsync<HealthResponse>();
+                bool isFailover = body?.IsFailover ?? false;
+                Preferences.Set("isReadOnly", isFailover);
+                return !isFailover; // true = Primary sống bình thường
+            }
+            catch
+            {
+                // Không kết nối được API → giữ nguyên flag hiện tại
+                return !Preferences.Get("isReadOnly", false);
+            }
+        }
 
         public async Task<string> TestKetNoiAsync(string khuVuc)
         {

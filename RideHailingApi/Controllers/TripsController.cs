@@ -45,7 +45,7 @@ namespace RideHailingApi.Controllers
                 // Primary sập — DataConnect không cho ghi vào Replica
                 return StatusCode(503, new
                 {
-                    error = "Server Chính đang bảo trì.",
+                    error   = "Server Chính đang bảo trì.",
                     message = "Hệ thống đang ở chế độ Read-Only. Bạn chỉ có thể xem lịch sử, không thể đặt xe mới lúc này."
                 });
             }
@@ -72,14 +72,14 @@ namespace RideHailingApi.Controllers
                 {
                     trips.Add(new TripHistoryItem
                     {
-                        TripID = (int)row["TripID"],
-                        UserID = (int)row["UserID"],
-                        DriverID = row["DriverID"] is DBNull ? null : (int?)row["DriverID"],
-                        PickupLocation = row["PickupLocation"].ToString() ?? "",
+                        TripID          = (int)row["TripID"],
+                        UserID          = (int)row["UserID"],
+                        DriverID        = row["DriverID"] is DBNull ? null : (int?)row["DriverID"],
+                        PickupLocation  = row["PickupLocation"].ToString() ?? "",
                         DropoffLocation = row["DropoffLocation"].ToString() ?? "",
-                        Region = row["Region"].ToString() ?? "",
-                        Status = row["Status"].ToString() ?? "",
-                        CreatedAt = row["CreatedAt"] is DBNull ? null : (DateTime?)row["CreatedAt"]
+                        Region          = row["Region"].ToString() ?? "",
+                        Status          = row["Status"].ToString() ?? "",
+                        CreatedAt       = row["CreatedAt"] is DBNull ? null : (DateTime?)row["CreatedAt"]
                     });
                 }
                 return Ok(trips);
@@ -99,10 +99,10 @@ namespace RideHailingApi.Controllers
                 var serverName = _db.ExecuteScalar(region, "SELECT @@SERVERNAME")?.ToString();
                 return Ok(new
                 {
-                    TrangThai = "Kết nối thành công",
-                    KhuVuc = region,
+                    TrangThai  = "Kết nối thành công",
+                    KhuVuc     = region,
                     ServerName = serverName,
-                    LoiNhan = "API của bạn đã đâm xuyên qua SQL Server rồi đó!"
+                    LoiNhan    = "API của bạn đã đâm xuyên qua SQL Server rồi đó!"
                 });
             }
             catch (Exception ex)
@@ -110,10 +110,31 @@ namespace RideHailingApi.Controllers
                 return StatusCode(500, new
                 {
                     TrangThai = "Kết nối thất bại",
-                    KhuVuc = region,
-                    LoiNhan = $"Không thể kết nối đến SQL Server: {ex.Message}"
+                    KhuVuc    = region,
+                    LoiNhan   = $"Không thể kết nối đến SQL Server: {ex.Message}"
                 });
             }
+        }
+
+        // GET /api/trips/health/{region}
+        // Trả về trạng thái Primary và Replica — client dùng để tự phát hiện failover khi khởi động.
+        [HttpGet("health/{region}")]
+        public IActionResult Health(string region)
+        {
+            bool primaryOk = _db.IsPrimaryAlive(region);
+            bool replicaOk = _db.IsReplicaAlive(region);
+            return Ok(new
+            {
+                Region    = region,
+                PrimaryOk = primaryOk,
+                ReplicaOk = replicaOk,
+                IsFailover = !primaryOk && replicaOk,
+                Message   = primaryOk
+                    ? $"Server chính ({region}) hoạt động bình thường."
+                    : replicaOk
+                        ? $"Server chính ({region}) KHÔNG khả dụng — đang dùng Replica."
+                        : $"Cả Primary lẫn Replica ({region}) đều không phản hồi!"
+            });
         }
     }
 }
