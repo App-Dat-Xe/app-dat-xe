@@ -13,7 +13,10 @@ namespace RideHailingApp
             bool isLoggedIn = Preferences.Get("isLoggedIn", false);
 
             if (isLoggedIn)
-                MainPage = new AppShell();
+            {
+                bool isDriver = Preferences.Get("isDriver", false);
+                MainPage = isDriver ? (Page)new DriverShell() : new AppShell();
+            }
             else
                 MainPage = new NavigationPage(new LoginPage());
         }

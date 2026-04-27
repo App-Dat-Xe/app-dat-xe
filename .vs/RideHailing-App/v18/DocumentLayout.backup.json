@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapp\\editprofilepage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|solutionrelative:ridehailingapp\\editprofilepage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|RideHailingApi\\RideHailingApi.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapi\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|RideHailingApi\\RideHailingApi.csproj|solutionrelative:ridehailingapi\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
@@ -59,10 +63,6 @@
       "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|solutionrelative:ridehailingapp\\editprofilepage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapp\\editprofilepage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|solutionrelative:ridehailingapp\\editprofilepage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapp\\mainpage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|solutionrelative:ridehailingapp\\mainpage.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -74,7 +74,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 20,
           "Children": [
             {
               "$type": "Bookmark",
@@ -90,10 +90,6 @@
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
-            },
-            {
-              "$type": "Bookmark",
               "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
             },
             {
@@ -102,20 +98,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "launchSettings.json",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Properties\\launchSettings.json",
               "RelativeDocumentMoniker": "RideHailingApi\\Properties\\launchSettings.json",
               "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Properties\\launchSettings.json",
               "RelativeToolTip": "RideHailingApi\\Properties\\launchSettings.json",
-              "ViewState": "AgIAAAcAAAAAAAAAAADwvxcAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-04-25T08:23:34.099Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "admin.html",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\wwwroot\\admin.html",
               "RelativeDocumentMoniker": "RideHailingApi\\wwwroot\\admin.html",
@@ -123,12 +119,11 @@
               "RelativeToolTip": "RideHailingApi\\wwwroot\\admin.html",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
-              "WhenOpened": "2026-04-25T08:21:21.379Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-25T08:21:21.379Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Program.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Program.cs",
@@ -136,12 +131,11 @@
               "RelativeToolTip": "RideHailingApi\\Program.cs",
               "ViewState": "AgIAADYAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-25T07:01:01.633Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-25T07:01:01.633Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "TripsController.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Controllers\\TripsController.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Controllers\\TripsController.cs",
@@ -149,12 +143,11 @@
               "RelativeToolTip": "RideHailingApi\\Controllers\\TripsController.cs",
               "ViewState": "AgIAALIAAAAAAAAAAAAwwLkAAABAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-25T05:33:02.085Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-25T05:33:02.085Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "DbConnectionFactory.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Services\\DbConnectionFactory.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Services\\DbConnectionFactory.cs",
@@ -166,7 +159,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\appsettings.json",
               "RelativeDocumentMoniker": "RideHailingApi\\appsettings.json",
@@ -174,12 +167,11 @@
               "RelativeToolTip": "RideHailingApi\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-04-18T08:50:34.491Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-18T08:50:34.491Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "MauiProgram.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\MauiProgram.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\MauiProgram.cs",
@@ -191,7 +183,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "RegisterPage.xaml.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\RegisterPage.xaml.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\RegisterPage.xaml.cs",
@@ -199,12 +191,11 @@
               "RelativeToolTip": "RideHailingApp\\RegisterPage.xaml.cs",
               "ViewState": "AgIAACQAAAAAAAAAAAAAwEcAAABYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-18T07:32:29.646Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-18T07:32:29.646Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Controllers\\AuthController.cs",
@@ -216,7 +207,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "UsersController.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Controllers\\UsersController.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Controllers\\UsersController.cs",
@@ -228,7 +219,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "LoginPage.xaml.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\LoginPage.xaml.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\LoginPage.xaml.cs",
@@ -236,12 +227,11 @@
               "RelativeToolTip": "RideHailingApp\\LoginPage.xaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-18T07:06:10.107Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-18T07:06:10.107Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "LoginPage.xaml",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\LoginPage.xaml",
               "RelativeDocumentMoniker": "RideHailingApp\\LoginPage.xaml",
@@ -249,12 +239,11 @@
               "RelativeToolTip": "RideHailingApp\\LoginPage.xaml",
               "ViewState": "AgIAAEkAAAAAAAAAAEBVwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-04-18T07:05:35.007Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-18T07:05:35.007Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "App.xaml.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\App.xaml.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\App.xaml.cs",
@@ -266,7 +255,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "EditProfilePage.xaml",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\EditProfilePage.xaml",
               "RelativeDocumentMoniker": "RideHailingApp\\EditProfilePage.xaml",
@@ -290,7 +279,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 0,
               "Title": "EditProfilePage.xaml.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\EditProfilePage.xaml.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\EditProfilePage.xaml.cs",
@@ -298,7 +287,8 @@
               "RelativeToolTip": "RideHailingApp\\EditProfilePage.xaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-18T06:53:00.576Z"
+              "WhenOpened": "2026-04-18T06:53:00.576Z",
+              "EditorCaption": ""
             }
           ]
         }

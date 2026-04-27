@@ -52,6 +52,7 @@ namespace RideHailingApp.Services
         public string PickupLocation { get; set; } = "";
         public string DropoffLocation { get; set; } = "";
         public string Region { get; set; } = "";
+        public string VehicleType { get; set; } = "Xe máy";
     }
 
     public class TripHistoryItem
@@ -83,7 +84,12 @@ namespace RideHailingApp.Services
         public string PickupLocation { get; set; } = "";
         public string DropoffLocation { get; set; } = "";
         public string Region { get; set; } = "";
+        public string VehicleType { get; set; } = "";
+        public decimal? EstimatedFare { get; set; }
         public DateTime? CreatedAt { get; set; }
+
+        public string DisplayVehicle => string.IsNullOrEmpty(VehicleType) ? "Xe máy" : VehicleType;
+        public string DisplayFare    => EstimatedFare.HasValue ? $"{EstimatedFare.Value:#,##0}đ" : "—";
     }
 
     // Generic kết quả gọi API — phân biệt rõ các trạng thái cho client xử lý UI

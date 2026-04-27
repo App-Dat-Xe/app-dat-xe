@@ -64,6 +64,30 @@
 
             </Grid>
 
+            <!-- ===== VEHICLE INFO CARD ===== -->
+            <Border BackgroundColor="#13161F"
+                    StrokeThickness="1"
+                    Stroke="#2E3348"
+                    Padding="16,12">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                    <Label Text="🚗" FontSize="28" VerticalOptions="Center"/>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                        <Label x:Name="VehicleTypeLabel"
+                               Text="Loại xe: —"
+                               TextColor="#8A8FA3"
+                               FontSize="13"/>
+                        <Label x:Name="VehiclePlateLabel"
+                               Text="Biển số: —"
+                               TextColor="White"
+                               FontSize="14"
+                               FontAttributes="Bold"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
             <!-- ===== CONNECTION ERROR ===== -->
             <Border x:Name="ErrorBanner"
                     IsVisible="False"
@@ -141,23 +165,53 @@
                            Text=""
                            TextColor="#8A8FA3"
                            FontSize="13"/>
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button Text="📍 Đã đến nơi"
-                                BackgroundColor="#1565C0"
-                                TextColor="White"
-                                FontAttributes="Bold"
-                                CornerRadius="10"
-                                HeightRequest="46"
-                                Clicked="OnArriveClicked"/>
-                        <Button Grid.Column="1"
-                                Text="✅ Hoàn thành"
-                                BackgroundColor="#2E7D32"
-                                TextColor="White"
-                                FontAttributes="Bold"
-                                CornerRadius="10"
-                                HeightRequest="46"
-                                Clicked="OnCompleteClicked"/>
-                    </Grid>
+
+                    <!-- Trạng thái hiện tại của chuyến -->
+                    <Label x:Name="ActiveTripStatusLabel"
+                           Text="🚗 Đang trên đường đến điểm đón"
+                           TextColor="#FFC107"
+                           FontSize="12"
+                           HorizontalOptions="Center"/>
+
+                    <!-- Bước 1: Tài xế đến điểm đón -->
+                    <Button x:Name="ArriveButton"
+                            Text="📍 Đã đến điểm đón"
+                            BackgroundColor="#1565C0"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="46"
+                            Clicked="OnArriveClicked"/>
+
+                    <!-- Bước 2: Tài xế đã đón khách lên xe -->
+                    <Button x:Name="PickupButton"
+                            Text="🧑 Đã đón khách"
+                            IsVisible="False"
+                            BackgroundColor="#E65100"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="46"
+                            Clicked="OnPickupClicked"/>
+
+                    <!-- Bước 3: Hoàn thành chuyến đi -->
+                    <Button x:Name="CompleteButton"
+                            Text="✅ Hoàn thành chuyến"
+                            IsVisible="False"
+                            BackgroundColor="#2E7D32"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="46"
+                            Clicked="OnCompleteClicked"/>
+
+                    <!-- Hủy cuốc (tài xế hủy sau khi nhận - ngoại lệ 6.4) -->
+                    <Button x:Name="DriverCancelButton"
+                            Text="Hủy cuốc"
+                            BackgroundColor="Transparent"
+                            TextColor="#FF5252"
+                            FontSize="13"
+                            Clicked="OnDriverCancelTripClicked"/>
                 </VerticalStackLayout>
             </Border>
 
@@ -209,9 +263,20 @@
                                            FontSize="13"
                                            VerticalOptions="Center"/>
                                 </HorizontalStackLayout>
+                                <!-- Vehicle type + estimated fare -->
+                                <HorizontalStackLayout Grid.Row="2" Spacing="8">
+                                    <Label Text="{Binding DisplayVehicle}"
+                                           TextColor="#FFC107"
+                                           FontSize="11"/>
+                                    <Label Text="•" TextColor="#4A5068" FontSize="11"/>
+                                    <Label Text="{Binding DisplayFare}"
+                                           TextColor="#00C853"
+                                           FontSize="11"
+                                           FontAttributes="Bold"/>
+                                </HorizontalStackLayout>
                                 <!-- Accept button -->
                                 <Button Grid.Column="1"
-                                        Grid.RowSpan="2"
+                                        Grid.RowSpan="3"
                                         Text="Nhận"
                                         BackgroundColor="#00C853"
                                         TextColor="White"
@@ -219,7 +284,7 @@
                                         FontSize="13"
                                         CornerRadius="10"
                                         WidthRequest="72"
-                                        HeightRequest="44"
+                                        HeightRequest="52"
                                         VerticalOptions="Center"
                                         CommandParameter="{Binding TripID}"
                                         Clicked="OnAcceptTripClicked"/>

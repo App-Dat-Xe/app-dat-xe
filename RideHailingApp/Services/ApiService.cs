@@ -117,14 +117,15 @@ namespace RideHailingApp.Services
 
         // ───────────────── Trips ─────────────────
 
-        public Task<ApiResult<BookingResponse>> BookTripAsync(int userId, string pickup, string dropoff)
+        public Task<ApiResult<BookingResponse>> BookTripAsync(int userId, string pickup, string dropoff, string vehicleType = "Xe máy")
         {
             var body = new TripBookingRequest
             {
                 UserID          = userId,
                 PickupLocation  = pickup,
                 DropoffLocation = dropoff,
-                Region          = _geo.GetCachedRegion()
+                Region          = _geo.GetCachedRegion(),
+                VehicleType     = vehicleType
             };
             var req = BuildRequest(HttpMethod.Post, "/api/trips/book-trip", body);
             return SendAsync<BookingResponse>(req);
@@ -156,9 +157,21 @@ namespace RideHailingApp.Services
             return SendAsync<object>(req);
         }
 
+        public Task<ApiResult<object>> PickupTripAsync(int tripId)
+        {
+            var req = BuildRequest(HttpMethod.Post, $"/api/trips/{tripId}/pickup");
+            return SendAsync<object>(req);
+        }
+
         public Task<ApiResult<object>> CompleteTripAsync(int tripId)
         {
             var req = BuildRequest(HttpMethod.Post, $"/api/trips/{tripId}/complete");
+            return SendAsync<object>(req);
+        }
+
+        public Task<ApiResult<object>> CancelTripAsync(int tripId)
+        {
+            var req = BuildRequest(HttpMethod.Post, $"/api/trips/{tripId}/cancel");
             return SendAsync<object>(req);
         }
 

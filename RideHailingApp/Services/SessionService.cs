@@ -20,7 +20,6 @@ namespace RideHailingApp.Services
             Preferences.Set("userPhone", phone);
             Preferences.Set("registeredRegion", registeredRegion);
         }
-
         public void Clear()
         {
             Preferences.Remove("isLoggedIn");
