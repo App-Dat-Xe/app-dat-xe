@@ -11,6 +11,8 @@ namespace RideHailingApp.Services
         public event Action<string, string>? TripStatusChanged;
         public event Action<int, string, string>? NewTripRequest;  // tripId, pickup, dropoff
         public event Action<string, string>? PoolingNotification;   // poolingType, message
+        public event Action<int, string, string, string>? DriverAssigned; // tripId, name, plate, vehicle
+        public event Action<int, string>? TripCancelled; // tripId, reason
 
         public event Action<Exception?>? Reconnecting;
         public event Action<string?>? Reconnected;

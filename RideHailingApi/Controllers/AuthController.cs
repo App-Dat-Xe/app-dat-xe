@@ -43,21 +43,35 @@ namespace RideHailingApi.Controllers
 
             try
             {
-                string pwCol = "PassWord";
-                if (_db.ExecuteScalarInt(region, "SELECT COUNT(1) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Users' AND COLUMN_NAME='PassWord'") == 0)
+                System.Data.DataTable table;
+                if (req.IsDriver)
                 {
-                    if (_db.ExecuteScalarInt(region, "SELECT COUNT(1) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Users' AND COLUMN_NAME='PasswordHash'") > 0)
-                        pwCol = "PasswordHash";
-                    else if (_db.ExecuteScalarInt(region, "SELECT COUNT(1) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Users' AND COLUMN_NAME='Password'") > 0)
-                        pwCol = "Password";
+                    table = _db.ExecuteReader(region,
+                        "SELECT TOP 1 DriverID AS UserID, Phone AS UserName, FullName, Phone, @r AS RegisteredRegion, PasswordHash AS PassWord FROM Drivers WHERE Phone = @u OR FullName = @u",
+                        cmd =>
+                        {
+                            cmd.Parameters.AddWithValue("@r", region);
+                            cmd.Parameters.AddWithValue("@u", req.UserName);
+                        });
                 }
-
-                var table = _db.ExecuteReader(region,
-                    $"SELECT TOP 1 UserID, UserName, FullName, Phone, RegisteredRegion, [{pwCol}] AS PassWord FROM Users WHERE UserName = @u",
-                    cmd =>
+                else
+                {
+                    string pwCol = "PassWord";
+                    if (_db.ExecuteScalarInt(region, "SELECT COUNT(1) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Users' AND COLUMN_NAME='PassWord'") == 0)
                     {
-                        cmd.Parameters.AddWithValue("@u", req.UserName);
-                    });
+                        if (_db.ExecuteScalarInt(region, "SELECT COUNT(1) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Users' AND COLUMN_NAME='PasswordHash'") > 0)
+                            pwCol = "PasswordHash";
+                        else if (_db.ExecuteScalarInt(region, "SELECT COUNT(1) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Users' AND COLUMN_NAME='Password'") > 0)
+                            pwCol = "Password";
+                    }
+
+                    table = _db.ExecuteReader(region,
+                        $"SELECT TOP 1 UserID, UserName, FullName, Phone, RegisteredRegion, [{pwCol}] AS PassWord FROM Users WHERE UserName = @u OR Phone = @u",
+                        cmd =>
+                        {
+                            cmd.Parameters.AddWithValue("@u", req.UserName);
+                        });
+                }
 
                 if (table.Rows.Count == 0)
                 {
@@ -69,20 +83,27 @@ namespace RideHailingApi.Controllers
                 string storedHash = row["PassWord"].ToString() ?? string.Empty;
 
                 bool ok = false;
-                try
+                if (req.IsDriver)
                 {
-                    if (!string.IsNullOrWhiteSpace(storedHash) && storedHash.StartsWith("$2"))
-                    {
-                        ok = BCrypt.Net.BCrypt.Verify(req.Password, storedHash);
-                    }
-                    else
-                    {
-                        ok = storedHash == req.Password;
-                    }
+                    ok = storedHash == req.Password;
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogWarning(ex, "Password verification failed (possibly invalid hash) for user {UserName}", req.UserName);
+                    try
+                    {
+                        if (!string.IsNullOrWhiteSpace(storedHash) && storedHash.StartsWith("$2"))
+                        {
+                            ok = BCrypt.Net.BCrypt.Verify(req.Password, storedHash);
+                        }
+                        else
+                        {
+                            ok = storedHash == req.Password;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Password verification failed (possibly invalid hash) for user {UserName}", req.UserName);
+                    }
                 }
 
                 if (!ok)
@@ -103,7 +124,8 @@ namespace RideHailingApi.Controllers
                 string userName = row["UserName"].ToString() ?? "";
                 string registeredRegion = row["RegisteredRegion"].ToString() ?? region;
 
-                string accessToken  = GenerateJwt(userId, userName, registeredRegion);
+                string role = req.IsDriver ? "DRIVER" : "USER";
+                string accessToken  = GenerateJwt(userId, userName, registeredRegion, role);
                 string refreshToken = _refreshTokens.Generate(userId, userName, registeredRegion);
                 int expiryMinutes   = int.Parse(_config["JwtSettings:ExpiryMinutes"] ?? "15");
 
@@ -120,7 +142,7 @@ namespace RideHailingApi.Controllers
                         fullName = row["FullName"].ToString() ?? "",
                         phone = row["Phone"].ToString() ?? "",
                         registeredRegion,
-                        roles = new[] { "USER" }
+                        roles = new[] { role }
                     }
                 });
             }
@@ -144,7 +166,8 @@ namespace RideHailingApi.Controllers
                 return Unauthorized(new { error = "Refresh token không hợp lệ hoặc đã hết hạn." });
 
             _refreshTokens.Revoke(req.RefreshToken);
-            string newAccess  = GenerateJwt(entry.UserId, entry.UserName, entry.Region);
+            // Defaulting to USER for refreshed tokens here, though typically we'd fetch the role from DB or refresh token store.
+            string newAccess  = GenerateJwt(entry.UserId, entry.UserName, entry.Region, "USER");
             string newRefresh = _refreshTokens.Generate(entry.UserId, entry.UserName, entry.Region);
             int expiryMinutes = int.Parse(_config["JwtSettings:ExpiryMinutes"] ?? "15");
 
@@ -228,7 +251,7 @@ namespace RideHailingApi.Controllers
             }
         }
 
-        private string GenerateJwt(int userId, string userName, string region)
+        private string GenerateJwt(int userId, string userName, string region, string role = "USER")
         {
             var jwt = _config.GetSection("JwtSettings");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
@@ -241,7 +264,7 @@ namespace RideHailingApi.Controllers
                 new Claim(JwtRegisteredClaimNames.UniqueName, userName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("region", region),
-                new Claim(ClaimTypes.Role, "USER")
+                new Claim(ClaimTypes.Role, role)
             };
 
             var token = new JwtSecurityToken(

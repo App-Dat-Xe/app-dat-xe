@@ -4,6 +4,7 @@ namespace RideHailingApi.Models
     {
         public string UserName { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public bool IsDriver { get; set; }
     }
 
     public class RegisterRequest

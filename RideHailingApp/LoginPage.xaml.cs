@@ -65,7 +65,8 @@ public partial class LoginPage : ContentPage
         LoginButton.Text      = "Đang xác thực...";
         ErrorLabel.IsVisible  = false;
 
-        var result = await _apiService.LoginAsync(userName, password);
+        bool isDriver = DriverModeSwitch.IsToggled;
+        var result = await _apiService.LoginAsync(userName, password, isDriver);
 
         if (result.IsSuccess && result.Data != null)
         {
@@ -78,7 +79,7 @@ public partial class LoginPage : ContentPage
 
             await _apiService.CheckAndSetReadOnlyAsync();
 
-            bool isDriver = DriverModeSwitch.IsToggled;
+            isDriver = DriverModeSwitch.IsToggled;
             Preferences.Set("isDriver", isDriver);
             if (isDriver)
                 Application.Current!.MainPage = new DriverShell();
@@ -89,7 +90,7 @@ public partial class LoginPage : ContentPage
         {
             Preferences.Set("isReadOnly", true);
             ReadOnlyBanner.IsVisible = true;
-            bool isDriver = DriverModeSwitch.IsToggled;
+            isDriver = DriverModeSwitch.IsToggled;
             Preferences.Set("isDriver", isDriver);
             Application.Current!.MainPage = isDriver ? new DriverShell() : new AppShell();
         }

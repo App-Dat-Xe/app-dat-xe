@@ -162,10 +162,10 @@ namespace RideHailingApp.Services
 
         // ───────────────── Auth ─────────────────
 
-        public async Task<ApiResult<LoginResponse>> LoginAsync(string userName, string password)
+        public async Task<ApiResult<LoginResponse>> LoginAsync(string userName, string password, bool isDriver)
         {
             var req = BuildRequest(HttpMethod.Post, "/api/auth/login",
-                new LoginRequest { UserName = userName, Password = password });
+                new { UserName = userName, Password = password, IsDriver = isDriver });
             var result = await SendAsync<LoginResponse>(req);
             if (result.IsSuccess && result.Data != null && !string.IsNullOrEmpty(result.Data.RefreshToken))
                 await SecureStorage.SetAsync("refreshToken", result.Data.RefreshToken);
