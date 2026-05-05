@@ -124,7 +124,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseDefaultFiles();  // Enable serving index.html by default
+app.UseStaticFiles();   // Enable static files (admin dashboard, styles, etc)
 app.UseRateLimiter();
 app.UseCors("DefaultCorsPolicy");
 app.UseMiddleware<RegionMiddleware>();
