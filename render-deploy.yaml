@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: ride-hailing-api
+    runtime: dotnet
+    buildCommand: dotnet publish RideHailingApi/RideHailingApi.csproj -c Release -o out
+    startCommand: dotnet out/RideHailingApi.dll
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:$PORT
+      - key: ConnectionStrings__NorthPrimary
+        sync: false
+      - key: ConnectionStrings__NorthReplica
+        sync: false
+      - key: ConnectionStrings__SouthPrimary
+        sync: false
+      - key: ConnectionStrings__SouthReplica
+        sync: false
+      - key: ConnectionStrings__CentralPrimary
+        sync: false
+      - key: ConnectionStrings__CentralReplica
+        sync: false

@@ -1,0 +1,7 @@
+# Render Deployment Configuration
+
+# Build Command
+dotnet publish -c Release -o out
+
+# Start Command  
+dotnet out/RideHailingApi.dll

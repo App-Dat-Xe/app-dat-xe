@@ -3,6 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Documentation files (local development guides)
+*.md
+!README.md
+!START_HERE.md
+
 # User-specific files
 *.rsuser
 *.suo
