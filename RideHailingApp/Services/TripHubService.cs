@@ -13,6 +13,8 @@ namespace RideHailingApp.Services
         public event Action<string, string>? PoolingNotification;   // poolingType, message
         public event Action<int, string, string, string>? DriverAssigned; // tripId, name, plate, vehicle
         public event Action<int, string>? TripCancelled; // tripId, reason
+        public event Action<bool, string, DateTime?>? MaintenanceModeChanged; // isActive, message, estimatedEndTime
+        public event Action<string, bool, string>? DatabaseStatusChanged; // region, isDegraded, message
 
         public event Action<Exception?>? Reconnecting;
         public event Action<string?>? Reconnected;
@@ -75,9 +77,13 @@ namespace RideHailingApp.Services
             };
 
             _connection.On<string, string>("OnPoolingNotification", (poolingType, message) =>
-            {
-                MainThread.BeginInvokeOnMainThread(() => PoolingNotification?.Invoke(poolingType, message));
-            });
+                MainThread.BeginInvokeOnMainThread(() => PoolingNotification?.Invoke(poolingType, message)));
+
+            _connection.On<bool, string, DateTime?>("OnMaintenanceModeChanged", (isActive, message, estimatedEndTime) =>
+                MainThread.BeginInvokeOnMainThread(() => MaintenanceModeChanged?.Invoke(isActive, message, estimatedEndTime)));
+
+            _connection.On<string, bool, string>("OnDatabaseStatusChanged", (region, isDegraded, message) =>
+                MainThread.BeginInvokeOnMainThread(() => DatabaseStatusChanged?.Invoke(region, isDegraded, message)));
 
             await _connection.StartAsync();
         }

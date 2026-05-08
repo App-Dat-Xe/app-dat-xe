@@ -6,6 +6,13 @@ namespace RideHailingApi.Hubs
     [Authorize]
     public class TripHub : Hub
     {
+        // Tất cả client tự động vào group toàn cầu để nhận broadcast từ admin
+        public override async Task OnConnectedAsync()
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, "GlobalUsers");
+            await base.OnConnectedAsync();
+        }
+
         // Client → Server: tham gia phòng theo chuyến đi
         public async Task JoinTripGroup(string tripId)
         {

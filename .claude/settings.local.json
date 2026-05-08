@@ -2,7 +2,25 @@
   "permissions": {
     "allow": [
       "Bash(xargs wc *)",
-      "Bash(dotnet build *)"
+      "Bash(dotnet build *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\lhnhan\\\\source\\\\repos\\\\app-dat-xe\\\\app-dat-xe\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(dotnet run *)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(tail -f \"C:\\\\\\\\Users\\\\\\\\lhnhan\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-lhnhan-source-repos-app-dat-xe-app-dat-xe\\\\\\\\44ab87f5-2b9f-4dcc-85a2-fc8be58f831a\\\\\\\\tasks\\\\\\\\b3bmj2uvb.output\")",
+      "Bash(curl *)",
+      "Bash(python -m json.tool)",
+      "Bash(taskkill *)",
+      "Bash(python -c \"import sys, json; data=json.load\\(sys.stdin\\); print\\('=== SERVERS ==='\\); [print\\(f\\\\\"{s['region']}: target={s['currentTarget']}, degraded={s['isDegraded']}\\\\\"\\) for s in data['servers']]; print\\('\\\\n=== RECENT LOGS ==='\\); [print\\(f\\\\\"{l['time'][11:19]} [{l['region']}] {l['message']}\\\\\"\\) for l in data['logs'][:5]]\")",
+      "Bash(netstat -ano)",
+      "Bash(echo \"Started with PID: $!\")",
+      "Bash(react)",
+      "Bash(mobile)",
+      "Bash(app\")",
+      "PowerShell($content = Get-Content -Path \"RideHailingApi/Data/north.sql\" -Encoding Unicode; $lines = $content.Count; Write-Host \"Total lines: $lines\"; $content | Select-Object -Skip 200 -First 100)",
+      "Bash(iconv -f UTF-16LE -t UTF-8 RideHailingApi/Data/north.sql)",
+      "Bash(iconv -f UTF-16LE -t UTF-8 RideHailingApi/Data/south.sql)",
+      "Bash(grep -A 12 \"-- Delete old seed data\")"
     ]
   }
 }

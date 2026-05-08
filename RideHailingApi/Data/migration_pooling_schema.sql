@@ -1,50 +1,93 @@
--- ===== SQL Migration: Thêm Pooling Support =====
--- Chạy script này trên cả 4 databases: north.sql, north_rep.sql, south.sql, south_rep.sql
+-- Migration: Add pooling support columns to Trips + PickupLocationID/DropoffLocationID FKs
+-- Idempotent — safe to re-run. Applies to all 4 databases.
 
--- Thêm cột vào Trips table để support pooling
-ALTER TABLE Trips
-ADD PooledWithTripID INT NULL,
-    MaxPassengers INT DEFAULT 2,
-    CurrentPassengers INT DEFAULT 1;
+DECLARE @dbs TABLE (name NVARCHAR(100));
+INSERT INTO @dbs VALUES
+    ('RideHailing_North'),
+    ('RideHailing_North_Replica'),
+    ('RideHailing_South'),
+    ('RideHailing_South_Replica');
 
--- Thêm index để tìm kiếm cuốc ghép nhanh hơn
-CREATE INDEX IX_Trips_PooledWith ON Trips(PooledWithTripID)
-WHERE PooledWithTripID IS NOT NULL;
+DECLARE @db NVARCHAR(100), @sql NVARCHAR(MAX);
+DECLARE cur CURSOR FOR SELECT name FROM @dbs;
+OPEN cur;
+FETCH NEXT FROM cur INTO @db;
 
--- Thêm constraint để đảm bảo tính toàn vẹn (optional)
-ALTER TABLE Trips
-ADD CONSTRAINT FK_Trips_PooledWith 
-FOREIGN KEY (PooledWithTripID) REFERENCES Trips(TripID);
-
--- Thêm cột GPS (latitude, longitude) cho mỗi trip để tính khoảng cách dễ hơn
--- (Optional: nếu muốn lưu GPS riêng, không chỉ trong tên địa điểm)
-IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE Name = 'PickupLatitude' AND Object_ID = OBJECT_ID('dbo.Trips'))
+WHILE @@FETCH_STATUS = 0
 BEGIN
-    ALTER TABLE Trips
-    ADD PickupLatitude FLOAT NULL,
-        PickupLongitude FLOAT NULL,
-        DropoffLatitude FLOAT NULL,
-        DropoffLongitude FLOAT NULL;
+    -- Ensure Locations table exists (prerequisite for FK columns)
+    SET @sql = N'
+        IF NOT EXISTS (SELECT 1 FROM ' + QUOTENAME(@db) + '.sys.objects
+                       WHERE object_id = OBJECT_ID(''' + @db + '.dbo.Locations'') AND type = ''U'')
+        BEGIN
+            CREATE TABLE ' + QUOTENAME(@db) + '.[dbo].[Locations] (
+                [LocationID]   INT           IDENTITY(1,1) NOT NULL,
+                [LocationName] NVARCHAR(255) NOT NULL,
+                [Address]      NVARCHAR(500) NULL,
+                [Latitude]     FLOAT         NOT NULL,
+                [Longitude]    FLOAT         NOT NULL,
+                CONSTRAINT PK_Locations PRIMARY KEY CLUSTERED ([LocationID] ASC)
+            );
+        END';
+    EXEC sp_executesql @sql;
+
+    -- PickupLocationID FK column
+    SET @sql = N'
+        IF NOT EXISTS (SELECT 1 FROM ' + QUOTENAME(@db) + '.sys.columns
+                       WHERE object_id = OBJECT_ID(''' + @db + '.dbo.Trips'') AND name = ''PickupLocationID'')
+        BEGIN
+            ALTER TABLE ' + QUOTENAME(@db) + '.[dbo].[Trips] ADD [PickupLocationID] INT NULL;
+            ALTER TABLE ' + QUOTENAME(@db) + '.[dbo].[Trips] ADD CONSTRAINT FK_Trips_Pickup
+                FOREIGN KEY ([PickupLocationID]) REFERENCES ' + QUOTENAME(@db) + '.[dbo].[Locations]([LocationID]);
+        END';
+    EXEC sp_executesql @sql;
+
+    -- DropoffLocationID FK column
+    SET @sql = N'
+        IF NOT EXISTS (SELECT 1 FROM ' + QUOTENAME(@db) + '.sys.columns
+                       WHERE object_id = OBJECT_ID(''' + @db + '.dbo.Trips'') AND name = ''DropoffLocationID'')
+        BEGIN
+            ALTER TABLE ' + QUOTENAME(@db) + '.[dbo].[Trips] ADD [DropoffLocationID] INT NULL;
+            ALTER TABLE ' + QUOTENAME(@db) + '.[dbo].[Trips] ADD CONSTRAINT FK_Trips_Dropoff
+                FOREIGN KEY ([DropoffLocationID]) REFERENCES ' + QUOTENAME(@db) + '.[dbo].[Locations]([LocationID]);
+        END';
+    EXEC sp_executesql @sql;
+
+    -- PooledWithTripID (self-reference FK)
+    SET @sql = N'
+        IF NOT EXISTS (SELECT 1 FROM ' + QUOTENAME(@db) + '.sys.columns
+                       WHERE object_id = OBJECT_ID(''' + @db + '.dbo.Trips'') AND name = ''PooledWithTripID'')
+        BEGIN
+            ALTER TABLE ' + QUOTENAME(@db) + '.[dbo].[Trips] ADD [PooledWithTripID] INT NULL;
+            ALTER TABLE ' + QUOTENAME(@db) + '.[dbo].[Trips] ADD CONSTRAINT FK_Trips_Pooled
+                FOREIGN KEY ([PooledWithTripID]) REFERENCES ' + QUOTENAME(@db) + '.[dbo].[Trips]([TripID]);
+        END';
+    EXEC sp_executesql @sql;
+
+    -- MaxPassengers
+    SET @sql = N'
+        IF NOT EXISTS (SELECT 1 FROM ' + QUOTENAME(@db) + '.sys.columns
+                       WHERE object_id = OBJECT_ID(''' + @db + '.dbo.Trips'') AND name = ''MaxPassengers'')
+            ALTER TABLE ' + QUOTENAME(@db) + '.[dbo].[Trips] ADD [MaxPassengers] INT NULL;';
+    EXEC sp_executesql @sql;
+
+    -- CurrentPassengers
+    SET @sql = N'
+        IF NOT EXISTS (SELECT 1 FROM ' + QUOTENAME(@db) + '.sys.columns
+                       WHERE object_id = OBJECT_ID(''' + @db + '.dbo.Trips'') AND name = ''CurrentPassengers'')
+            ALTER TABLE ' + QUOTENAME(@db) + '.[dbo].[Trips] ADD [CurrentPassengers] INT NULL;';
+    EXEC sp_executesql @sql;
+
+    -- Index on PooledWithTripID for pooling queries
+    SET @sql = N'
+        IF NOT EXISTS (SELECT 1 FROM ' + QUOTENAME(@db) + '.sys.indexes
+                       WHERE object_id = OBJECT_ID(''' + @db + '.dbo.Trips'') AND name = ''IX_Trips_PooledWithTripID'')
+            CREATE INDEX IX_Trips_PooledWithTripID ON ' + QUOTENAME(@db) + '.[dbo].[Trips]([PooledWithTripID]);';
+    EXEC sp_executesql @sql;
+
+    FETCH NEXT FROM cur INTO @db;
 END
 
--- Thêm bảng PoolingHistory để track lịch sử ghép cuốc (optional)
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE Name = 'PoolingHistory')
-BEGIN
-    CREATE TABLE PoolingHistory (
-        PoolingID INT PRIMARY KEY IDENTITY(1,1),
-        MainTripID INT NOT NULL,
-        SecondaryTripID INT NOT NULL,
-        PooledAt DATETIME DEFAULT GETDATE(),
-        UnpooledAt DATETIME NULL,
-        PickupDistance FLOAT,
-        DropoffDistance FLOAT,
-        FOREIGN KEY (MainTripID) REFERENCES Trips(TripID),
-        FOREIGN KEY (SecondaryTripID) REFERENCES Trips(TripID)
-    );
-END
-
--- Thêm index trên Status và Region để tìm Pending trips nhanh hơn
-CREATE INDEX IX_Trips_StatusRegion ON Trips(Status, Region)
-WHERE Status = 'Pending';
-
+CLOSE cur;
+DEALLOCATE cur;
 GO

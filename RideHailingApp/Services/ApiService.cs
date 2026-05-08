@@ -14,6 +14,8 @@ namespace RideHailingApp.Services
         private readonly OfflineQueueService _offlineQueue;
         private string? _jwtToken;
 
+        public static event Action<bool>? OnDatabaseStatusChanged;
+
         public ApiService(GeoLocatorService geo, OfflineQueueService offlineQueue)
         {
             _geo          = geo;
@@ -137,6 +139,20 @@ namespace RideHailingApp.Services
             try
             {
                 var resp = await _httpClient.SendAsync(req);
+
+                // Tự động cập nhật trạng thái Read-Only dựa trên header từ Server
+                if (resp.Headers.TryGetValues("X-Database-Degraded", out var values))
+                {
+                    if (bool.TryParse(values.FirstOrDefault(), out bool isDegraded))
+                    {
+                        var current = Preferences.Get("isReadOnly", false);
+                        if (current != isDegraded)
+                        {
+                            Preferences.Set("isReadOnly", isDegraded);
+                            OnDatabaseStatusChanged?.Invoke(isDegraded);
+                        }
+                    }
+                }
 
                 if (resp.IsSuccessStatusCode)
                 {
@@ -374,22 +390,39 @@ namespace RideHailingApp.Services
 
         // ───────────────── Health check ─────────────────
 
+        // Gọi GET /health/db/{region} — nguồn sự thật cho failover (bao gồm cả manual override từ admin)
         public async Task<bool> CheckAndSetReadOnlyAsync()
         {
             string region = _geo.GetCachedRegion();
+            if (string.IsNullOrEmpty(region)) region = "South";
             try
             {
-                var resp = await _httpClient.GetAsync($"/api/trips/health/{region}");
+                var resp = await _httpClient.GetAsync($"/health/db/{region}");
                 if (!resp.IsSuccessStatusCode) return false;
-                var body = await resp.Content.ReadFromJsonAsync<HealthResponse>();
-                bool isFailover = body?.IsFailover ?? false;
-                Preferences.Set("isReadOnly", isFailover);
-                return !isFailover;
+                var body = await resp.Content.ReadFromJsonAsync<DbHealthResponse>();
+                bool isDegraded = body?.IsDegradedMode ?? false;
+                Preferences.Set("isReadOnly", isDegraded);
+                OnDatabaseStatusChanged?.Invoke(isDegraded);
+                return !isDegraded;
             }
             catch
             {
                 return !Preferences.Get("isReadOnly", false);
             }
+        }
+
+        // Gọi GET /health/maintenance — trạng thái bảo trì từ admin
+        public async Task CheckAndSetMaintenanceAsync()
+        {
+            try
+            {
+                var resp = await _httpClient.GetAsync("/health/maintenance");
+                if (!resp.IsSuccessStatusCode) return;
+                var body = await resp.Content.ReadFromJsonAsync<MaintenanceResponse>();
+                bool isActive = body?.IsActive ?? false;
+                Preferences.Set("isMaintenanceMode", isActive);
+            }
+            catch { }
         }
 
         public async Task<string> TestKetNoiAsync(string khuVuc)

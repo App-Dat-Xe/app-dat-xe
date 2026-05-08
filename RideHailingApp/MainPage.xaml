@@ -54,9 +54,33 @@
                             StrokeThickness="1" Stroke="#FFC107" Padding="12,8">
                         <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
                         <HorizontalStackLayout Spacing="8">
-                            <Label Text="⚠️" FontSize="13" VerticalOptions="Center"/>
-                            <Label Text="Chế độ dự phòng • Không thể đặt xe"
+                            <Label x:Name="ReadOnlyBannerIcon" Text="⚠️" FontSize="13" VerticalOptions="Center"/>
+                            <Label x:Name="ReadOnlyBannerText" Text="Chế độ dự phòng • Không thể đặt xe"
                                    TextColor="#E65100" FontSize="13" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </Border>
+
+                    <!-- Banner phục hồi hệ thống -->
+                    <Border x:Name="RecoveryBanner" IsVisible="False"
+                            Margin="16,10,16,0" BackgroundColor="#E8F5E9"
+                            StrokeThickness="1" Stroke="#00B14F" Padding="12,8">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="✅" FontSize="13" VerticalOptions="Center"/>
+                            <Label Text="Hệ thống đã phục hồi • Có thể đặt xe bình thường"
+                                   TextColor="#00B14F" FontSize="13" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </Border>
+
+                    <!-- Banner bảo trì -->
+                    <Border x:Name="MaintenanceBanner" IsVisible="False"
+                            Margin="16,10,16,0" BackgroundColor="#FFEBEE"
+                            StrokeThickness="1" Stroke="#FF5252" Padding="12,8">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="⛔" FontSize="13" VerticalOptions="Center"/>
+                            <Label Text="Hệ thống đang bảo trì • Chỉ xem lịch sử và hồ sơ"
+                                   TextColor="#C62828" FontSize="13" VerticalOptions="Center"/>
                         </HorizontalStackLayout>
                     </Border>
 

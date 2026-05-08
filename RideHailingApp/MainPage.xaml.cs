@@ -51,8 +51,11 @@ public partial class MainPage : ContentPage
         _hub         = MauiProgram.Services.GetRequiredService<TripHubService>();
         _mapsService = MauiProgram.Services.GetRequiredService<GoogleMapsService>();
 
-        _hub.LocationUpdated   += OnDriverLocationUpdated;
-        _hub.TripStatusChanged += OnTripStatusChanged;
+        _hub.LocationUpdated       += OnDriverLocationUpdated;
+        _hub.TripStatusChanged     += OnTripStatusChanged;
+        _hub.MaintenanceModeChanged += OnMaintenanceModeChanged;
+        _hub.DatabaseStatusChanged  += OnDatabaseStatusChanged;
+        ApiService.OnDatabaseStatusChanged += OnApiDatabaseStatusChanged;
 
         Connectivity.ConnectivityChanged += OnConnectivityChanged;
 
@@ -67,20 +70,85 @@ public partial class MainPage : ContentPage
     private void UpdateServerStatusUI()
     {
         bool isReadOnly   = Preferences.Get("isReadOnly", false);
+        bool isMaintenance = Preferences.Get("isMaintenanceMode", false);
         string regionName = Preferences.Get("regionName", "Server Miền Nam");
 
-        ServerStatusLabel.Text = isReadOnly
-            ? $"⚠ {regionName} — Dự phòng"
-            : $"● {regionName}";
-        ServerStatusLabel.TextColor = isReadOnly
-            ? MauiColor.FromArgb("#FFC107")
-            : MauiColor.FromArgb("#CCFFDD");
+        if (isMaintenance)
+        {
+            ServerStatusLabel.Text      = "⛔ Hệ thống đang bảo trì";
+            ServerStatusLabel.TextColor = MauiColor.FromArgb("#FF5252");
+        }
+        else
+        {
+            ServerStatusLabel.Text = isReadOnly
+                ? $"⚠ {regionName} — Dự phòng"
+                : $"● {regionName}";
+            ServerStatusLabel.TextColor = isReadOnly
+                ? MauiColor.FromArgb("#FFC107")
+                : MauiColor.FromArgb("#CCFFDD");
+        }
 
-        ReadOnlyBanner.IsVisible = isReadOnly;
+        ReadOnlyBanner.IsVisible   = isReadOnly && !isMaintenance;
+        MaintenanceBanner.IsVisible = isMaintenance;
 
         string userName = Preferences.Get("userName", "?");
         AvatarLabel.Text = string.IsNullOrEmpty(userName) ? "?" :
             userName.Trim().Split(' ').Last().ToUpper()[0].ToString();
+    }
+
+    private async void OnMaintenanceModeChanged(bool isActive, string message, DateTime? estimatedEndTime)
+    {
+        Preferences.Set("isMaintenanceMode", isActive);
+        if (estimatedEndTime.HasValue)
+            Preferences.Set("maintenanceEndTime", estimatedEndTime.Value.ToString("O"));
+        UpdateServerStatusUI();
+
+        if (isActive)
+        {
+            string display = string.IsNullOrWhiteSpace(message)
+                ? "Hệ thống đang bảo trì. Không thể đặt xe mới."
+                : message;
+            if (estimatedEndTime.HasValue)
+                display += $"\n\nDự kiến kết thúc: {estimatedEndTime:HH:mm dd/MM/yyyy}";
+            await DisplayAlert("Thông báo hệ thống", display, "Đã hiểu");
+        }
+        else
+        {
+            await DisplayAlert("Hệ thống hoạt động trở lại", "Bạn có thể đặt xe bình thường.", "OK");
+        }
+    }
+
+    private async void OnDatabaseStatusChanged(string region, bool isDegraded, string message)
+    {
+        // Cập nhật trạng thái hệ thống ngay lập tức bất kể vùng nào
+        // (Trong thực tế 1 vùng sập thì vùng kia vẫn dùng được, nhưng ở đây ta ưu tiên hiển thị real-time)
+        Preferences.Set("isReadOnly", isDegraded);
+
+        MainThread.BeginInvokeOnMainThread(() => {
+            UpdateServerStatusUI();
+
+            if (isDegraded)
+            {
+                // Hiệu ứng chuyển sang chế độ failover
+                ShowFailoverAnimation();
+            }
+            else
+            {
+                // Hiệu ứng phục hồi hệ thống
+                ShowRecoveryAnimation();
+            }
+        });
+
+        if (isDegraded)
+        {
+            await DisplayAlert("Sự cố máy chủ",
+                $"{message}\n\nHệ thống đang chạy trên Database dự phòng (Chế độ chỉ đọc).", "Đã hiểu");
+        }
+        else
+        {
+            await DisplayAlert("Máy chủ đã khôi phục",
+                "Hệ thống đã quay trở lại hoạt động bình thường trên Database chính.", "Tuyệt vời");
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -180,6 +248,13 @@ public partial class MainPage : ContentPage
 
     private void OnXeMayClicked(object sender, TappedEventArgs e)
     {
+        if (Preferences.Get("isMaintenanceMode", false))
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+                await DisplayAlert("Không thể đặt xe",
+                    "Hệ thống đang bảo trì.\nBạn chỉ có thể xem lịch sử chuyến đi và thông tin cá nhân.", "OK"));
+            return;
+        }
         if (Preferences.Get("isReadOnly", false))
         {
             MainThread.BeginInvokeOnMainThread(async () =>
@@ -193,6 +268,13 @@ public partial class MainPage : ContentPage
 
     private void OnOtoClicked(object sender, TappedEventArgs e)
     {
+        if (Preferences.Get("isMaintenanceMode", false))
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+                await DisplayAlert("Không thể đặt xe",
+                    "Hệ thống đang bảo trì.\nBạn chỉ có thể xem lịch sử chuyến đi và thông tin cá nhân.", "OK"));
+            return;
+        }
         if (Preferences.Get("isReadOnly", false))
         {
             MainThread.BeginInvokeOnMainThread(async () =>
@@ -467,6 +549,20 @@ public partial class MainPage : ContentPage
 
     private async void OnConfirmBookingClicked(object sender, EventArgs e)
     {
+        if (Preferences.Get("isMaintenanceMode", false))
+        {
+            await DisplayAlert("Không thể đặt xe",
+                "Hệ thống đang bảo trì. Vui lòng thử lại sau.", "OK");
+            return;
+        }
+
+        if (Preferences.Get("isReadOnly", false))
+        {
+            await DisplayAlert("Không thể đặt xe",
+                "Hệ thống đang ở chế độ dự phòng. Chỉ có thể xem thông tin, không thể đặt xe mới.", "OK");
+            return;
+        }
+
         int userId = Preferences.Get("userID", 0);
         string? token = _apiService.GetToken();
 
@@ -697,6 +793,75 @@ public partial class MainPage : ContentPage
     //  Mất kết nối mạng
     // ─────────────────────────────────────────────
 
+    private void OnApiDatabaseStatusChanged(bool isDegraded)
+    {
+        MainThread.BeginInvokeOnMainThread(() => {
+            UpdateServerStatusUI();
+
+            if (isDegraded)
+            {
+                ShowFailoverAnimation();
+            }
+            else
+            {
+                ShowRecoveryAnimation();
+            }
+        });
+    }
+
+    // ─────────────────────────────────────────────
+    //  Hiệu ứng chuyển trạng thái
+    // ─────────────────────────────────────────────
+
+    private async void ShowFailoverAnimation()
+    {
+        // Hiển thị banner failover với hiệu ứng fade in + pulse
+        ReadOnlyBanner.Opacity = 0;
+        ReadOnlyBanner.IsVisible = true;
+        RecoveryBanner.IsVisible = false;
+
+        // Fade in
+        await ReadOnlyBanner.FadeTo(1, 300);
+
+        // Pulse effect (3 lần)
+        for (int i = 0; i < 3; i++)
+        {
+            await Task.WhenAll(
+                ReadOnlyBanner.ScaleTo(1.05, 150),
+                ReadOnlyBannerIcon.ScaleTo(1.3, 150)
+            );
+            await Task.WhenAll(
+                ReadOnlyBanner.ScaleTo(1.0, 150),
+                ReadOnlyBannerIcon.ScaleTo(1.0, 150)
+            );
+            await Task.Delay(100);
+        }
+    }
+
+    private async void ShowRecoveryAnimation()
+    {
+        // Ẩn banner failover
+        ReadOnlyBanner.IsVisible = false;
+
+        // Hiển thị banner phục hồi với hiệu ứng slide down + fade in
+        RecoveryBanner.Opacity = 0;
+        RecoveryBanner.TranslationY = -30;
+        RecoveryBanner.IsVisible = true;
+
+        // Slide down + fade in
+        await Task.WhenAll(
+            RecoveryBanner.FadeTo(1, 400),
+            RecoveryBanner.TranslateTo(0, 0, 400, Easing.CubicOut)
+        );
+
+        // Giữ banner 5 giây rồi tự động ẩn
+        await Task.Delay(5000);
+
+        // Fade out
+        await RecoveryBanner.FadeTo(0, 300);
+        RecoveryBanner.IsVisible = false;
+    }
+
     private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
     {
         bool hasInternet = e.NetworkAccess == NetworkAccess.Internet;
@@ -715,6 +880,19 @@ public partial class MainPage : ContentPage
     {
         base.OnAppearing();
         UpdateServerStatusUI();
+        _ = ConnectHubAsync();
+    }
+
+    private async Task ConnectHubAsync()
+    {
+        try { await _hub.StartAsync(); }
+        catch { /* silently ignore — hub will retry on reconnect */ }
+
+        // Sync trạng thái thực từ server mỗi lần vào app
+        // (tránh hiển thị banner stale từ Preferences cũ)
+        await _apiService.CheckAndSetMaintenanceAsync();
+        await _apiService.CheckAndSetReadOnlyAsync();
+        UpdateServerStatusUI();
     }
 
     protected override void OnDisappearing()
@@ -723,6 +901,8 @@ public partial class MainPage : ContentPage
         _isTracking = false;
         _gpsCts?.Cancel();
         _searchTimeoutCts?.Cancel();
-        Connectivity.ConnectivityChanged -= OnConnectivityChanged;
+        Connectivity.ConnectivityChanged     -= OnConnectivityChanged;
+        _hub.MaintenanceModeChanged          -= OnMaintenanceModeChanged;
+        _hub.DatabaseStatusChanged           -= OnDatabaseStatusChanged;
     }
 }

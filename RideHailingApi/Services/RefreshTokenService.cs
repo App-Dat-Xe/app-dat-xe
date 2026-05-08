@@ -3,16 +3,16 @@ using System.Security.Cryptography;
 
 namespace RideHailingApi.Services
 {
-    public record RefreshTokenEntry(int UserId, string UserName, string Region, DateTime ExpiresAt);
+    public record RefreshTokenEntry(int UserId, string UserName, string Region, string Role, DateTime ExpiresAt);
 
     public class RefreshTokenService
     {
         private readonly ConcurrentDictionary<string, RefreshTokenEntry> _tokens = new();
 
-        public string Generate(int userId, string userName, string region)
+        public string Generate(int userId, string userName, string region, string role = "USER")
         {
             string token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
-            _tokens[token] = new RefreshTokenEntry(userId, userName, region, DateTime.UtcNow.AddDays(30));
+            _tokens[token] = new RefreshTokenEntry(userId, userName, region, role, DateTime.UtcNow.AddDays(30));
             return token;
         }
 

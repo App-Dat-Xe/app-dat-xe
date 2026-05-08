@@ -21,6 +21,16 @@ namespace RideHailingApi.Middleware
 
         public async Task InvokeAsync(HttpContext context, IConnectionStringResolver resolver)
         {
+            // Lấy region từ header (đã được RegionMiddleware parse)
+            string region = context.Items["Region"] as string ?? "South";
+            bool isDegraded = resolver.IsDegradedMode(region);
+
+            // Gắn thông tin trạng thái DB vào Header của MỌI response để Frontend cập nhật thời gian thực
+            context.Response.OnStarting(() => {
+                context.Response.Headers["X-Database-Degraded"] = isDegraded.ToString().ToLower();
+                return Task.CompletedTask;
+            });
+
             var method = context.Request.Method.ToUpperInvariant();
             bool isWrite = method is "POST" or "PUT" or "PATCH" or "DELETE";
 
@@ -37,9 +47,6 @@ namespace RideHailingApi.Middleware
                 await _next(context);
                 return;
             }
-
-            // Lấy region từ header (đã được RegionMiddleware parse)
-            string region = context.Items["Region"] as string ?? "South";
 
             // Diagnostic: log resolver state to help debug unexpected 503
             try

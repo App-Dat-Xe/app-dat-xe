@@ -22,45 +22,83 @@ namespace RideHailingApi.Data
         }
 
         // ── WRITE ─────────────────────────────────────────────────────────────────
-        // Luôn ghi vào Primary. Ném lỗi nếu đang DegradedMode hoặc Primary không khả dụng.
+        // Ghi đồng thời vào cả Primary và Replica để giả lập đồng bộ dữ liệu.
+        // Ném lỗi nếu đang DegradedMode (Primary sập).
 
         public object? ExecuteScalarWrite(string region, string sql, Action<SqlCommand>? parameterizer = null)
         {
             EnsureWritable(region);
-            string cs = _resolver.GetConnectionString(region);   // Primary khi không degraded
+            var (primaryCs, replicaCs) = _resolver.GetDualConnectionStrings(region);
+
+            object? result = null;
+            // 1. Ghi vào Primary
             try
             {
-                using var conn = new SqlConnection(cs);
+                using var conn = new SqlConnection(primaryCs);
                 conn.Open();
                 using var cmd = new SqlCommand(sql, conn);
                 parameterizer?.Invoke(cmd);
-                return cmd.ExecuteScalar();
+                result = cmd.ExecuteScalar();
             }
             catch (SqlException ex)
             {
-                _logger?.LogError(ex, "ExecuteScalarWrite failed for region {Region}. ConnectionString={Cs}. SqlException: {Msg}", region, cs, ex.Message);
-                // Rethrow original SqlException so callers can inspect ex.Number (e.g. unique constraint)
+                _logger?.LogError(ex, "ExecuteScalarWrite (Primary) failed for region {Region}.", region);
                 throw;
             }
+
+            // 2. Ghi vào Replica (Best effort trong môi trường giả lập này)
+            try
+            {
+                using var conn = new SqlConnection(replicaCs);
+                conn.Open();
+                using var cmd = new SqlCommand(sql, conn);
+                parameterizer?.Invoke(cmd);
+                cmd.ExecuteScalar();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "ExecuteScalarWrite (Replica sync) failed for region {Region}.", region);
+            }
+
+            return result;
         }
 
         public int ExecuteNonQuery(string region, string sql, Action<SqlCommand>? parameterizer = null)
         {
             EnsureWritable(region);
-            string cs = _resolver.GetConnectionString(region);
+            var (primaryCs, replicaCs) = _resolver.GetDualConnectionStrings(region);
+
+            int result = 0;
+            // 1. Ghi vào Primary
             try
             {
-                using var conn = new SqlConnection(cs);
+                using var conn = new SqlConnection(primaryCs);
                 conn.Open();
                 using var cmd = new SqlCommand(sql, conn);
                 parameterizer?.Invoke(cmd);
-                return cmd.ExecuteNonQuery();
+                result = cmd.ExecuteNonQuery();
             }
             catch (SqlException ex)
             {
-                _logger?.LogError(ex, "ExecuteNonQuery failed for region {Region}. ConnectionString={Cs}. SqlException: {Msg}", region, cs, ex.Message);
+                _logger?.LogError(ex, "ExecuteNonQuery (Primary) failed for region {Region}.", region);
                 throw;
             }
+
+            // 2. Ghi vào Replica
+            try
+            {
+                using var conn = new SqlConnection(replicaCs);
+                conn.Open();
+                using var cmd = new SqlCommand(sql, conn);
+                parameterizer?.Invoke(cmd);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "ExecuteNonQuery (Replica sync) failed for region {Region}.", region);
+            }
+
+            return result;
         }
 
         // ── READ ──────────────────────────────────────────────────────────────────

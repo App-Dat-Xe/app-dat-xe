@@ -24,17 +24,25 @@ public partial class ProfilePage : ContentPage
         // (phòng trường hợp theme bị đổi từ bên ngoài)
         _viewModel.SyncDarkModeFromSystem();
 
-        // Cập nhật banner + badge trực tiếp
+        // Cập nhật banner + badge từ Preferences (đã được sync bởi MainPage khi vào app)
         bool isReadOnly = Preferences.Get("isReadOnly", false);
-        ReadOnlyBanner.IsVisible = isReadOnly;
+        bool isMaintenance = Preferences.Get("isMaintenanceMode", false);
+        ReadOnlyBanner.IsVisible = isReadOnly && !isMaintenance;
 
         string regionName = Preferences.Get("regionName", "Miền Nam");
-        ServerBadge.Text = isReadOnly ? "⚠ Replica (Dự phòng)" : $"● Server {regionName}";
-        ServerBadge.TextColor = isReadOnly
-            ? Microsoft.Maui.Graphics.Color.FromArgb("#FFC107")
-            : Microsoft.Maui.Graphics.Color.FromArgb("#00C853");
+        if (isMaintenance)
+        {
+            ServerBadge.Text = "⛔ Đang bảo trì";
+            ServerBadge.TextColor = Microsoft.Maui.Graphics.Color.FromArgb("#FF5252");
+        }
+        else
+        {
+            ServerBadge.Text = isReadOnly ? "⚠ Replica (Dự phòng)" : $"● Server {regionName}";
+            ServerBadge.TextColor = isReadOnly
+                ? Microsoft.Maui.Graphics.Color.FromArgb("#FFC107")
+                : Microsoft.Maui.Graphics.Color.FromArgb("#00C853");
+        }
 
-        // Cập nhật lại menu failover (icon có thể thay đổi từ tab khác)
         _viewModel.RefreshMenus();
     }
 
@@ -49,27 +57,6 @@ public partial class ProfilePage : ContentPage
         {
             case "history":
                 await Shell.Current.GoToAsync(nameof(TripHistoryPage));
-                break;
-
-            case "toggle_failover":
-                bool current = Preferences.Get("simulateFailover", false);
-                bool newVal = !current;
-                Preferences.Set("simulateFailover", newVal);
-                Preferences.Set("isReadOnly", newVal);
-
-                string msg = newVal
-                    ? "✅ Đã BẬT giả lập failover.\nApp chuyển sang chế độ Read-Only (Replica).\n\nQuay lại tab Đặt xe để thấy hiệu ứng."
-                    : "✅ Đã TẮT giả lập failover.\nApp trở lại hoạt động bình thường (Primary).";
-
-                await DisplayAlert("Demo Failover", msg, "OK");
-
-                // Chỉ refresh menu, KHÔNG tạo ViewModel mới (sẽ reset switch)
-                _viewModel.RefreshMenus();
-                ReadOnlyBanner.IsVisible = newVal;
-                ServerBadge.Text = newVal ? "⚠ Replica (Dự phòng)" : "● Server Miền Nam";
-                ServerBadge.TextColor = newVal
-                    ? Microsoft.Maui.Graphics.Color.FromArgb("#FFC107")
-                    : Microsoft.Maui.Graphics.Color.FromArgb("#00C853");
                 break;
 
             case "edit":
@@ -96,7 +83,7 @@ public partial class ProfilePage : ContentPage
 
         Preferences.Remove("isLoggedIn");
         Preferences.Remove("isReadOnly");
-        Preferences.Remove("simulateFailover");
+        Preferences.Remove("isMaintenanceMode");
 
         Application.Current.MainPage = new NavigationPage(new LoginPage());
     }
@@ -178,8 +165,6 @@ public class ProfileViewModel : INotifyPropertyChanged
     /// </summary>
     public void RefreshMenus()
     {
-        bool failoverOn = Preferences.Get("simulateFailover", false);
-
         ProfileMenus.Clear();
         ProfileMenus.Add(new ProfileMenuItem
         {
@@ -187,15 +172,6 @@ public class ProfileViewModel : INotifyPropertyChanged
             Icon = "🕐",
             Title = "Lịch sử chuyến đi",
             Description = "Xem tất cả các chuyến đi của bạn"
-        });
-        ProfileMenus.Add(new ProfileMenuItem
-        {
-            Key = "toggle_failover",
-            Icon = failoverOn ? "🔴" : "🟢",
-            Title = failoverOn ? "TẮT giả lập Failover" : "BẬT giả lập Failover",
-            Description = failoverOn
-                ? "Đang ở chế độ Replica (Read-Only) — Nhấn để về Primary"
-                : "Nhấn để giả lập Primary sập → chuyển Replica"
         });
         ProfileMenus.Add(new ProfileMenuItem
         {

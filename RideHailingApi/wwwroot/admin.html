@@ -191,10 +191,31 @@ section { margin-bottom: 30px; }
 </head>
 <body>
 
+<!-- ── LOGIN OVERLAY ── -->
+<div id="loginOverlay" style="display:flex;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.85);align-items:center;justify-content:center;">
+  <div style="background:#1C1F2E;border:1px solid #2E3348;border-radius:20px;padding:40px 36px;width:340px;box-shadow:0 20px 60px #000a;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:32px;margin-bottom:8px;">🚕</div>
+      <div style="font-size:20px;font-weight:800;color:#fff;">RideNow Admin</div>
+      <div style="font-size:13px;color:#8A8FA3;margin-top:4px;">Đăng nhập để tiếp tục</div>
+    </div>
+    <input id="loginUser" type="text" placeholder="Tên đăng nhập" autocomplete="username"
+      style="width:100%;padding:11px 14px;background:#13161F;border:1px solid #2E3348;border-radius:10px;color:#fff;font-size:14px;margin-bottom:12px;outline:none;" />
+    <input id="loginPass" type="password" placeholder="Mật khẩu" autocomplete="current-password"
+      style="width:100%;padding:11px 14px;background:#13161F;border:1px solid #2E3348;border-radius:10px;color:#fff;font-size:14px;margin-bottom:8px;outline:none;" />
+    <div id="loginError" style="color:#FF5252;font-size:12px;min-height:18px;margin-bottom:10px;text-align:center;"></div>
+    <button onclick="doLogin()"
+      style="width:100%;padding:12px;background:#00C853;border:none;border-radius:10px;color:#000;font-size:15px;font-weight:800;cursor:pointer;">
+      Đăng nhập
+    </button>
+  </div>
+</div>
+
 <header>
   <h1><div class="pulse"></div>🚗 <span>RideNow</span> &nbsp;Admin Dashboard</h1>
   <div style="display:flex;align-items:center;gap:10px">
     <span class="refresh-info" id="timerLabel">Auto-refresh 3s</span>
+    <button class="refresh-btn" style="background:var(--green);color:#000;font-weight:700" onclick="resetAllOverrides()">Khôi phục tất cả Primary</button>
     <button class="refresh-btn" onclick="refreshCurrent()">⟳ Refresh</button>
   </div>
 </header>
@@ -210,6 +231,33 @@ section { margin-bottom: 30px; }
 
 <!-- ══════════════════ TAB: FAILOVER ══════════════════ -->
 <div class="tab-content active" id="tab-failover">
+
+  <!-- ── MAINTENANCE MODE CARD ── -->
+  <section>
+    <div class="section-title">🔴 Chế độ bảo trì</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px" id="maintenanceStatusText">
+          <span id="maintenanceDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:8px;vertical-align:middle"></span>
+          <span id="maintenanceStatusLabel">Hệ thống đang hoạt động bình thường</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted)">Khi bật bảo trì: người dùng không thể đặt xe, tài xế bị offline. Chỉ xem lịch sử và hồ sơ.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <input id="maintenanceMsg" type="text" placeholder="Lý do bảo trì (tùy chọn)"
+               style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:#fff;font-size:13px;width:200px">
+        <input id="maintenanceEndTime" type="datetime-local"
+               style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:#fff;font-size:13px;width:200px">
+        <button id="maintenanceBtn" onclick="toggleMaintenance()"
+                style="padding:9px 20px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--red);color:#fff;transition:opacity .15s">
+          ⛔ Bật bảo trì
+        </button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">
+        Trạng thái bảo trì: <span id="maintenanceEndTimeDisplay">—</span>
+      </div>
+    </div>
+  </section>
 
   <div class="mode-row" id="modeBadges">
     <span class="mode-badge mode-ok"><span>●</span> Đang tải...</span>
@@ -352,6 +400,59 @@ section { margin-bottom: 30px; }
 </main>
 
 <script>
+// ── Auth ──────────────────────────────────────────────
+let _token = sessionStorage.getItem('adminToken') || '';
+
+function authHeaders(extra) {
+  return Object.assign({ 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }, extra || {});
+}
+
+async function apiFetch(url, opts) {
+  opts = opts || {};
+  opts.headers = authHeaders(opts.headers);
+  const r = await fetch(url, opts);
+  if (r.status === 401 || r.status === 403) { logout(); return r; }
+  return r;
+}
+
+function logout() {
+  _token = '';
+  sessionStorage.removeItem('adminToken');
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+async function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err  = document.getElementById('loginError');
+  if (!user || !pass) { err.textContent = 'Vui lòng nhập đầy đủ.'; return; }
+  try {
+    const r = await fetch('/api/auth/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName: user, password: pass })
+    });
+    if (!r.ok) { err.textContent = 'Sai tên đăng nhập hoặc mật khẩu.'; return; }
+    const d = await r.json();
+    _token = d.accessToken;
+    sessionStorage.setItem('adminToken', _token);
+    document.getElementById('loginOverlay').style.display = 'none';
+    fetchStatus();
+    fetchMaintenanceStatus();
+    loadKpis();
+    loadRevenue();
+    loadUsers();
+    loadDrivers();
+  } catch(e) { err.textContent = 'Lỗi kết nối: ' + e.message; }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginOverlay').style.display !== 'none') doLogin();
+});
+
 // ── Tab Navigation ────────────────────────────────────
 let currentTab = 'failover';
 
@@ -362,6 +463,9 @@ function switchTab(tab) {
   document.querySelectorAll('.tab')[['failover','analytics','users','drivers'].indexOf(tab)].classList.add('active');
   currentTab = tab;
   if (tab === 'analytics') { loadKpis(); loadRevenue(); }
+  else if (tab === 'users') { loadUsers(); }
+  else if (tab === 'drivers') { loadDrivers(); }
+  else if (tab === 'failover') { fetchStatus(); fetchMaintenanceStatus(); }
 }
 
 function refreshCurrent() {
@@ -371,10 +475,85 @@ function refreshCurrent() {
   else if (currentTab === 'drivers') loadDrivers();
 }
 
+// ── MAINTENANCE MODE ──────────────────────────────────
+let _maintenanceActive = false;
+
+function renderMaintenanceUI(isActive, message, estimatedEndTime) {
+  _maintenanceActive = isActive;
+  const dot      = document.getElementById('maintenanceDot');
+  const label    = document.getElementById('maintenanceStatusLabel');
+  const btn      = document.getElementById('maintenanceBtn');
+  const timeDisp = document.getElementById('maintenanceEndTimeDisplay');
+
+  if (isActive) {
+    dot.style.background   = 'var(--red)';
+    dot.style.boxShadow    = '0 0 6px #FF525299';
+    label.textContent      = '⛔ Đang bảo trì — người dùng không thể đặt xe';
+    label.style.color      = 'var(--red)';
+    btn.textContent        = '✅ Tắt bảo trì';
+    btn.style.background   = 'var(--green)';
+    btn.style.color        = '#111';
+    if (estimatedEndTime) {
+      const dt = new Date(estimatedEndTime);
+      timeDisp.textContent = `🔴 Bảo trì (dự kiến kết thúc: ${dt.toLocaleString('vi-VN')})`;
+      timeDisp.style.color = 'var(--red)';
+    } else {
+      timeDisp.textContent = '🔴 Bảo trì (không xác định kết thúc)';
+      timeDisp.style.color = 'var(--red)';
+    }
+  } else {
+    dot.style.background   = 'var(--green)';
+    dot.style.boxShadow    = '0 0 6px #00C85399';
+    label.textContent      = 'Hệ thống đang hoạt động bình thường';
+    label.style.color      = '#fff';
+    btn.textContent        = '⛔ Bật bảo trì';
+    btn.style.background   = 'var(--red)';
+    btn.style.color        = '#fff';
+    timeDisp.textContent   = '🟢 Hoạt động bình thường';
+    timeDisp.style.color   = 'var(--green)';
+  }
+}
+
+async function fetchMaintenanceStatus() {
+  try {
+    const r = await apiFetch('/api/admin/maintenance/status');
+    if (!r.ok) return;
+    const d = await r.json();
+    renderMaintenanceUI(d.isActive, d.message, d.estimatedEndTime);
+  } catch(e) {}
+}
+
+async function toggleMaintenance() {
+  const btn = document.getElementById('maintenanceBtn');
+  btn.disabled = true;
+  try {
+    if (_maintenanceActive) {
+      const r = await apiFetch('/api/admin/maintenance/off', { method: 'POST' });
+      if (r.ok) renderMaintenanceUI(false, '', null);
+    } else {
+      const msg = document.getElementById('maintenanceMsg').value.trim();
+      const endTimeStr = document.getElementById('maintenanceEndTime').value;
+      let endTime = null;
+      if (endTimeStr) endTime = new Date(endTimeStr).toISOString();
+
+      const r = await apiFetch('/api/admin/maintenance/on', {
+        method: 'POST',
+        body: JSON.stringify({ message: msg || null, estimatedEndTime: endTime })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        renderMaintenanceUI(true, d.message, d.estimatedEndTime);
+      }
+    }
+  } catch(e) { alert('Lỗi: ' + e.message); }
+  finally { btn.disabled = false; }
+}
+
 // ── FAILOVER ─────────────────────────────────────────
 async function fetchStatus() {
   try {
-    const r = await fetch('/api/admin/status');
+    const r = await apiFetch('/api/admin/status');
+    if (!r.ok) return;
     const d = await r.json();
     renderBadges(d.servers);
     renderGrid(d.servers);
@@ -418,13 +597,19 @@ function renderGrid(servers) {
 
 async function togglePrimary(region, isDown) {
   const action = isDown ? 'simulate-up' : 'simulate-down';
-  await fetch(`/api/admin/${action}/${region}`, { method: 'POST' });
+  await apiFetch(`/api/admin/${action}/${region}`, { method: 'POST' });
+  await fetchStatus();
+}
+
+async function resetAllOverrides() {
+  if (!confirm('Bạn có chắc muốn khôi phục trạng thái hoạt động bình thường cho toàn bộ hệ thống?')) return;
+  await apiFetch('/api/admin/reset-manual-overrides', { method: 'POST' });
   await fetchStatus();
 }
 
 async function testWrite(region) {
   show(region, 'r-warn', '⏳ Đang thực hiện GHI vào Primary...');
-  const res = await fetch(`/api/admin/test-write/${region}`, { method: 'POST' });
+  const res = await apiFetch(`/api/admin/test-write/${region}`, { method: 'POST' });
   const d   = await res.json();
   if (res.ok) show(region, 'r-ok', `✅ GHI THÀNH CÔNG\n→ Nguồn: ${d.source}\n→ ${d.message}`);
   else show(region, 'r-err', `❌ GHI THẤT BẠI (HTTP ${res.status})\n→ Primary không khả dụng\n→ ${d.message}`);
@@ -433,7 +618,7 @@ async function testWrite(region) {
 
 async function testRead(region) {
   show(region, 'r-warn', '⏳ Đang thực hiện ĐỌC...');
-  const res = await fetch(`/api/admin/test-read/${region}`);
+  const res = await apiFetch(`/api/admin/test-read/${region}`);
   const d   = await res.json();
   if (res.ok) {
     const isReplica = d.source === 'Replica';
@@ -467,7 +652,8 @@ function renderLog(logs) {
 // ── ANALYTICS ────────────────────────────────────────
 async function loadKpis() {
   try {
-    const r = await fetch('/api/admin/dashboard/kpis');
+    const r = await apiFetch('/api/admin/dashboard/kpis');
+    if (!r.ok) { console.error('KPIs error', r.status); return; }
     const d = await r.json();
     document.getElementById('k-trips').textContent   = d.totalTrips.toLocaleString('vi-VN');
     document.getElementById('k-users').textContent   = d.totalUsers.toLocaleString('vi-VN');
@@ -483,7 +669,8 @@ async function loadRevenue() {
   const body   = document.getElementById('revBody');
   body.innerHTML = '<div class="log-empty">Đang tải...</div>';
   try {
-    const r = await fetch(`/api/admin/dashboard/revenue?days=30`);
+    const r = await apiFetch(`/api/admin/dashboard/revenue?days=30`);
+    if (!r.ok) { body.innerHTML = '<div class="log-empty">Lỗi xác thực</div>'; return; }
     const rows = await r.json();
     const filtered = rows.filter(x => x.region === region);
     if (!filtered.length) { body.innerHTML = '<div class="log-empty">Không có dữ liệu</div>'; return; }
@@ -514,8 +701,10 @@ async function loadUsers() {
   const tbody  = document.getElementById('usersBody');
   tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Đang tải...</td></tr>';
   try {
-    const r    = await fetch(`/api/admin/users?search=${encodeURIComponent(search)}&region=${region}`);
-    const data = await r.json();
+    const r    = await apiFetch(`/api/admin/users?search=${encodeURIComponent(search)}&region=${region}`);
+    if (!r.ok) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Lỗi tải dữ liệu (HTTP ${r.status})</td></tr>`; return; }
+    const res  = await r.json();
+    const data = res.data || res;
     if (!data.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Không tìm thấy người dùng nào</td></tr>'; return; }
     tbody.innerHTML = data.map(u => `
       <tr>
@@ -532,14 +721,16 @@ async function loadUsers() {
           </button>
         </td>
       </tr>`).join('');
-  } catch(e) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Lỗi: ${e.message}</td></tr>`; }
+  } catch(e) {
+    console.error('Data load error', e);
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Lỗi: ${e.message}</td></tr>`;
+  }
 }
 
 async function toggleUserLock(userId, region, isLocked) {
   try {
-    const r = await fetch(`/api/admin/users/${userId}/lock?region=${region}`, {
+    const r = await apiFetch(`/api/admin/users/${userId}/lock?region=${region}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isLocked: !isLocked })
     });
     if (r.ok) await loadUsers();
@@ -554,8 +745,10 @@ async function loadDrivers() {
   const tbody  = document.getElementById('driversBody');
   tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Đang tải...</td></tr>';
   try {
-    const r    = await fetch(`/api/admin/drivers?search=${encodeURIComponent(search)}&region=${region}`);
-    const data = await r.json();
+    const r    = await apiFetch(`/api/admin/drivers?search=${encodeURIComponent(search)}&region=${region}`);
+    if (!r.ok) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Lỗi tải dữ liệu (HTTP ${r.status})</td></tr>`; return; }
+    const res  = await r.json();
+    const data = res.data || res;
     if (!data.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Không tìm thấy tài xế nào</td></tr>'; return; }
     tbody.innerHTML = data.map(d => `
       <tr>
@@ -572,14 +765,16 @@ async function loadDrivers() {
           </button>
         </td>
       </tr>`).join('');
-  } catch(e) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Lỗi: ${e.message}</td></tr>`; }
+  } catch(e) {
+    console.error('Data load error', e);
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Lỗi: ${e.message}</td></tr>`;
+  }
 }
 
 async function toggleDriverLock(driverId, region, isLocked) {
   try {
-    const r = await fetch(`/api/admin/drivers/${driverId}/lock?region=${region}`, {
+    const r = await apiFetch(`/api/admin/drivers/${driverId}/lock?region=${region}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isLocked: !isLocked })
     });
     if (r.ok) await loadDrivers();
@@ -588,8 +783,16 @@ async function toggleDriverLock(driverId, region, isLocked) {
 }
 
 // ── AUTO REFRESH ─────────────────────────────────────
-fetchStatus();
-setInterval(() => { if (currentTab === 'failover') fetchStatus(); }, 3000);
+if (_token) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  fetchStatus();
+  fetchMaintenanceStatus();
+  loadKpis();
+  loadRevenue();
+  loadUsers();
+  loadDrivers();
+}
+setInterval(() => { if (_token && currentTab === 'failover') fetchStatus(); }, 3000);
 
 let cd = 3;
 setInterval(() => {

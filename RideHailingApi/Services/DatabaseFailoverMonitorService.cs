@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.SignalR;
+using RideHailingApi.Hubs;
+
 namespace RideHailingApi.Services
 {
     public class DatabaseFailoverMonitorService : BackgroundService
@@ -9,18 +12,22 @@ namespace RideHailingApi.Services
         private readonly IDatabaseProbe         _probe;
         private readonly FailoverSimulator      _simulator;   // Giữ tích hợp với admin manual override
         private readonly ILogger<DatabaseFailoverMonitorService> _logger;
+        private readonly IHubContext<TripHub> _hubContext;
+
         public DatabaseFailoverMonitorService(
             IConfiguration config,
             DatabaseRuntimeState state,
             IDatabaseProbe probe,
             FailoverSimulator simulator,
-            ILogger<DatabaseFailoverMonitorService> logger)
+            ILogger<DatabaseFailoverMonitorService> logger,
+            IHubContext<TripHub> hubContext)
         {
             _config    = config;
             _state     = state;
             _probe     = probe;
             _simulator = simulator;
             _logger    = logger;
+            _hubContext = hubContext;
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -55,9 +62,15 @@ namespace RideHailingApi.Services
             bool backupAlive   = await _probe.CanConnectAsync(backupCs, ct);
 
             // Note: enableAutoFailover is passed from ExecuteAsync (global flag)
+            bool statusChanged = false;
+            bool isDegraded = false;
+            string message = "";
 
             _state.Update(region, s =>
             {
+                var oldTarget = s.CurrentTarget;
+                var oldDegraded = s.IsDegradedMode;
+
                 s.PrimaryHealthy   = primaryAlive;
                 s.BackupHealthy    = backupAlive;
                 s.ManualOverrideDown = manualDown;
@@ -71,58 +84,45 @@ namespace RideHailingApi.Services
                 if (manualDown)
                 {
                     // Admin explicitly requested failover -> switch to backup
-                    if (s.CurrentTarget != DatabaseTarget.Backup)
-                    {
-                        _logger.LogWarning(
-                            "[{Region}] Primary DB xuống (admin manual override). Chuyển sang Backup — DegradedMode ON.",
-                            region);
-                        _simulator.Append(region,
-                            $"⚠ Manual-failover [{region}]: Admin bật chế độ failover — chuyển sang Backup DB.");
-                    }
                     s.CurrentTarget = DatabaseTarget.Backup;
                     s.IsDegradedMode = true;
                 }
                 else if (enableAutoFailover && !manualDown && !primaryAlive && backupAlive)
                 {
                     // Automatic failover enabled and primary down -> switch to backup
-                    if (s.CurrentTarget != DatabaseTarget.Backup)
-                    {
-                        string reason = "connection failure";
-                        _logger.LogWarning(
-                            "[{Region}] Primary DB xuống ({Reason}). Chuyển sang Backup — DegradedMode ON.",
-                            region, reason);
-                        _simulator.Append(region,
-                            $"⚠ Auto-failover [{region}]: Primary xuống ({reason}) — chuyển sang Backup DB.");
-                    }
                     s.CurrentTarget = DatabaseTarget.Backup;
                     s.IsDegradedMode = true;
                 }
                 else if (primaryAlive && s.PrimaryRecoveryCount >= recoveryThreshold)
                 {
-                    if (s.CurrentTarget != DatabaseTarget.Primary)
-                    {
-                        _logger.LogInformation(
-                            "[{Region}] Primary DB hồi phục (liên tiếp {Count}/{Threshold} lần). Quay về Primary — DegradedMode OFF.",
-                            region, s.PrimaryRecoveryCount, recoveryThreshold);
-                        _simulator.Append(region,
-                            $"✅ Auto-recovery [{region}]: Primary hồi phục — quay về Primary DB.");
-                    }
                     s.CurrentTarget  = DatabaseTarget.Primary;
                     s.IsDegradedMode = false;
                 }
                 else if (!primaryAlive && !backupAlive)
                 {
-                    if (s.CurrentTarget != DatabaseTarget.None)
-                    {
-                        _logger.LogError(
-                            "[{Region}] CẢ Primary VÀ Backup đều không khả dụng!", region);
-                        _simulator.Append(region,
-                            $"🔴 CRITICAL [{region}]: Cả Primary và Backup đều XUỐNG!");
-                    }
                     s.CurrentTarget  = DatabaseTarget.None;
                     s.IsDegradedMode = true;
                 }
+
+                if (s.CurrentTarget != oldTarget || s.IsDegradedMode != oldDegraded)
+                {
+                    statusChanged = true;
+                    isDegraded = s.IsDegradedMode;
+                    message = isDegraded
+                        ? $"Hệ thống vùng {region} đã chuyển sang chế độ dự phòng (Read-only)."
+                        : $"Hệ thống vùng {region} đã khôi phục hoạt động bình thường.";
+
+                    _logger.LogWarning("[{Region}] Status changed. Degraded={Degraded}, Target={Target}",
+                        region, isDegraded, s.CurrentTarget);
+                    _simulator.Append(region, message);
+                }
             });
+
+            if (statusChanged)
+            {
+                await _hubContext.Clients.Group("GlobalUsers")
+                    .SendAsync("OnDatabaseStatusChanged", region, isDegraded, message, ct);
+            }
         }
     }
 }

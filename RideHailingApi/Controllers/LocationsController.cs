@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using RideHailingApi.Data;
 using RideHailingApi.Middleware;
@@ -5,7 +6,9 @@ using System.Data;
 
 namespace RideHailingApi.Controllers
 {
+    [ApiVersion("1.0")]
     [ApiController]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Route("api/[controller]")]
     public class LocationsController : ControllerBase
     {

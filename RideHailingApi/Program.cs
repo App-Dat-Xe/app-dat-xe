@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -15,26 +16,41 @@ builder.WebHost.UseUrls("http://0.0.0.0:5108");
 builder.Services.AddControllers();
 
 // ── Failover Infrastructure ──────────────────────────────────────────────────
-builder.Services.AddSingleton<DatabaseRuntimeState>();          // Per-region runtime state
-builder.Services.AddSingleton<IDatabaseProbe, SqlDatabaseProbe>(); // SQL health probe
-builder.Services.AddSingleton<IConnectionStringResolver, ConnectionStringResolver>(); // CS resolver
-builder.Services.AddSingleton<DbConnectionFactory>();           // Raw config reader (còn dùng ở legacy code)
-builder.Services.AddSingleton<FailoverSimulator>();             // Admin manual override + event log
-builder.Services.AddHostedService<DatabaseFailoverMonitorService>(); // Auto health-check background service
+builder.Services.AddSingleton<DatabaseRuntimeState>();
+builder.Services.AddSingleton<IDatabaseProbe, SqlDatabaseProbe>();
+builder.Services.AddSingleton<IConnectionStringResolver, ConnectionStringResolver>();
+builder.Services.AddSingleton<DbConnectionFactory>();
+builder.Services.AddSingleton<FailoverSimulator>();
+builder.Services.AddHostedService<DatabaseFailoverMonitorService>();
 // ─────────────────────────────────────────────────────────────────────────────
 
 builder.Services.AddScoped<DataConnect>();
-// Register EF Core DbContext for ScheduledTrips and future models.
+
+// EF Core DbContext for ScheduledTrips
 builder.Services.AddDbContext<DataContext>(options =>
 {
-    // Use South_Primary as default for migrations / administrative tasks.
     var cs = builder.Configuration.GetConnectionString("South_Primary");
     options.UseSqlServer(cs);
 });
-// ScheduledTripService depends on EF DbContext
+
 builder.Services.AddScoped<ScheduledTripService>();
 builder.Services.AddSingleton<FareService>();
 builder.Services.AddSingleton<RefreshTokenService>();
+builder.Services.AddSingleton<MaintenanceModeService>();
+
+// ── Email & Auth Token Services ──────────────────────────────────────────────
+builder.Services.AddSingleton<EmailTokenService>();
+builder.Services.AddTransient<IEmailService, SmtpEmailService>();
+
+// ── FCM Push Notifications ───────────────────────────────────────────────────
+builder.Services.AddSingleton<DeviceTokenStore>();
+builder.Services.AddScoped<IFcmNotificationService, FcmNotificationService>();
+builder.Services.AddHttpClient("fcm");
+
+// ── Scheduled Trip Dispatcher ────────────────────────────────────────────────
+builder.Services.AddHostedService<ScheduledTripDispatcherService>();
+
+// ── Rate Limiting ────────────────────────────────────────────────────────────
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("auth", o =>
@@ -52,9 +68,10 @@ builder.Services.AddRateLimiter(options =>
     });
     options.RejectionStatusCode = 429;
 });
+
 builder.Services.AddSignalR();
 
-// JWT Authentication
+// ── JWT Authentication ────────────────────────────────────────────────────────
 var jwt = builder.Configuration.GetSection("JwtSettings");
 var key = Encoding.UTF8.GetBytes(jwt["Key"] ?? throw new InvalidOperationException("JwtSettings:Key missing"));
 
@@ -63,14 +80,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwt["Issuer"],
-            ValidAudience = jwt["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ClockSkew = TimeSpan.FromSeconds(60)
+            ValidIssuer              = jwt["Issuer"],
+            ValidAudience            = jwt["Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(key),
+            ClockSkew                = TimeSpan.FromSeconds(60)
         };
         options.Events = new JwtBearerEvents
         {
@@ -85,14 +102,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnChallenge = ctx =>
             {
                 ctx.HandleResponse();
-                ctx.Response.StatusCode = 401;
+                ctx.Response.StatusCode  = 401;
                 ctx.Response.ContentType = "application/json";
                 return ctx.Response.WriteAsync(
                     "{\"error\":\"Unauthorized\",\"message\":\"Missing or invalid Authorization header\"}");
             },
             OnForbidden = ctx =>
             {
-                ctx.Response.StatusCode = 403;
+                ctx.Response.StatusCode  = 403;
                 ctx.Response.ContentType = "application/json";
                 return ctx.Response.WriteAsync(
                     "{\"error\":\"Forbidden\",\"message\":\"You do not have permission to access this resource\"}");
@@ -102,41 +119,50 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Tighten CORS: read allowed origins from configuration
+// ── API Versioning ────────────────────────────────────────────────────────────
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion                  = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions                  = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new HeaderApiVersionReader("X-API-Version"),
+        new QueryStringApiVersionReader("api-version")
+    );
+}).AddMvc();
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
 var allowed = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 if (allowed == null || allowed.Length == 0)
-{
-    // safe default for local development
     allowed = new[] { "https://localhost:7285", "http://localhost:5108", "http://192.168.1.121:5108" };
-}
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DefaultCorsPolicy", p => p
-        .WithOrigins(allowed)
+        .SetIsOriginAllowed(_ => true)
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials());
 });
 
 builder.Services.AddOpenApi();
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
+
 app.UseHttpsRedirection();
-app.UseDefaultFiles();  // Enable serving index.html by default
-app.UseStaticFiles();   // Enable static files (admin dashboard, styles, etc)
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseRateLimiter();
 app.UseCors("DefaultCorsPolicy");
 app.UseMiddleware<RegionMiddleware>();
 app.UseMiddleware<DegradedModeMiddleware>();
+app.UseMiddleware<MaintenanceMiddleware>();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-// Expose admin debug endpoints only in Development environment
-if (app.Environment.IsDevelopment())
-{
-    // admin/debug controller is protected by JWT role; keep available for local testing
-}
 app.MapHub<TripHub>("/hubs/trip");
 app.MapGet("/admin", () => Results.Redirect("/admin.html"));
 app.Run();

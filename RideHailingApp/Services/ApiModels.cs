@@ -113,6 +113,24 @@ namespace RideHailingApp.Services
         public string Message  { get; set; } = "";
     }
 
+    // Phản hồi từ GET /health/db/{region}
+    public class DbHealthResponse
+    {
+        public string Region         { get; set; } = "";
+        public bool IsDegradedMode   { get; set; }
+        public bool IsFailover       { get; set; }
+        public string CurrentTarget  { get; set; } = "";
+        public bool PrimaryHealthy   { get; set; }
+        public bool BackupHealthy    { get; set; }
+    }
+
+    // Phản hồi từ GET /health/maintenance
+    public class MaintenanceResponse
+    {
+        public bool IsActive   { get; set; }
+        public string? Message { get; set; }
+    }
+
     public class PendingTripItem
     {
         public int TripID { get; set; }

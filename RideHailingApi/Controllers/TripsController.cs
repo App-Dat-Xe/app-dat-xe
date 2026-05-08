@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -6,15 +7,19 @@ using RideHailingApi.Hubs;
 using RideHailingApi.Middleware;
 using RideHailingApi.Models;
 using RideHailingApi.Services;
+
 namespace RideHailingApi.Controllers
 {
+    [ApiVersion("1.0")]
     [ApiController]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Route("api/[controller]")]
     public class TripsController : ControllerBase
     {
         private readonly DataConnect _db;
         private readonly IHubContext<TripHub> _hub;
         private readonly FareService _fareService;
+        private readonly IFcmNotificationService _fcm;
 
         private int ResolveLocationId(string region, string locationName)
         {
@@ -33,11 +38,13 @@ namespace RideHailingApi.Controllers
             }
             catch { return 1; }
         }
-        public TripsController(DataConnect db, IHubContext<TripHub> hub, FareService fareService)
+        public TripsController(DataConnect db, IHubContext<TripHub> hub, FareService fareService,
+            IFcmNotificationService fcm)
         {
             _db = db;
             _hub = hub;
             _fareService = fareService;
+            _fcm = fcm;
         }
 
         // GET /api/trips/estimate-fare?vehicleType=Xe+máy&distanceKm=5.5
@@ -115,11 +122,11 @@ namespace RideHailingApi.Controllers
             {
                 var table = _db.ExecuteReader(region,
                     "SELECT t.TripID, t.UserID, t.DriverID, p.LocationName AS PickupLocation, d.LocationName AS DropoffLocation, t.Region, t.Status, " +
-                    "'Xe máy' AS VehicleType, t.Price AS Fare, t.CreatedAt " +
+                    "'Xe máy' AS VehicleType, t.Price AS Fare, t.UpdatedAt " +
                     "FROM Trips t " +
                     "LEFT JOIN Locations p ON t.PickupLocationID = p.LocationID " +
                     "LEFT JOIN Locations d ON t.DropoffLocationID = d.LocationID " +
-                    "WHERE t.UserID = @id ORDER BY t.CreatedAt DESC",
+                    "WHERE t.UserID = @id ORDER BY t.UpdatedAt DESC",
                     cmd => cmd.Parameters.AddWithValue("@id", userId));
 
                 var trips = new List<TripHistoryItem>();
@@ -136,7 +143,7 @@ namespace RideHailingApi.Controllers
                         Status          = row["Status"].ToString() ?? "",
                         VehicleType     = row["VehicleType"].ToString() ?? "",
                         Fare            = row["Fare"] is DBNull ? null : Convert.ToDecimal(row["Fare"]),
-                        CreatedAt       = row["CreatedAt"] is DBNull ? null : (DateTime?)row["CreatedAt"]
+                        CreatedAt       = row["UpdatedAt"] is DBNull ? null : (DateTime?)row["UpdatedAt"]
                     });
                 }
                 return Ok(trips);
@@ -241,6 +248,15 @@ namespace RideHailingApi.Controllers
                     .SendAsync("OnTripStatusChanged", "Accepted",
                         $"Tài xế {driverName} đã nhận chuyến của bạn!");
 
+                // Push notification to passenger
+                var userIdObj = _db.ExecuteScalar(region,
+                    "SELECT UserID FROM Trips WHERE TripID=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", tripId));
+                if (userIdObj != null && userIdObj != DBNull.Value)
+                    await _fcm.SendToUserAsync(Convert.ToInt32(userIdObj),
+                        "Tài xế đã nhận chuyến",
+                        $"Tài xế {driverName} đang trên đường đến đón bạn!");
+
                 return Ok(new { accepted = true, driverId, driverName });
             }
             catch (InvalidOperationException)
@@ -266,6 +282,15 @@ namespace RideHailingApi.Controllers
 
                 await _hub.Clients.Group($"Trip_{tripId}")
                     .SendAsync("OnTripStatusChanged", "Arrived", "Tài xế đã đến điểm đón!");
+
+                // Push notification to passenger
+                var userIdObj = _db.ExecuteScalar(region,
+                    "SELECT UserID FROM Trips WHERE TripID=@id",
+                    cmd => cmd.Parameters.AddWithValue("@id", tripId));
+                if (userIdObj != null && userIdObj != DBNull.Value)
+                    await _fcm.SendToUserAsync(Convert.ToInt32(userIdObj),
+                        "Tài xế đã đến nơi",
+                        "Tài xế đang chờ bạn tại điểm đón. Hãy ra ngay!");
 
                 return Ok(new { arrived = true });
             }
@@ -562,10 +587,10 @@ namespace RideHailingApi.Controllers
 
                 // Lấy danh sách các trip Pending khác (cùng region, khác userID, không phải trip chính)
                 var candidatesTable = _db.ExecuteReader(region,
-                    "SELECT TripID, UserID, PickupLocation, DropoffLocation, CreatedAt " +
+                    "SELECT TOP 50 TripID, UserID, PickupLocation, DropoffLocation, CreatedAt " +
                     "FROM Trips " +
                     "WHERE Status='Pending' AND Region=@region AND TripID!=@tripId " +
-                    "ORDER BY CreatedAt DESC LIMIT 50",
+                    "ORDER BY CreatedAt DESC",
                     cmd =>
                     {
                         cmd.Parameters.AddWithValue("@region", region);

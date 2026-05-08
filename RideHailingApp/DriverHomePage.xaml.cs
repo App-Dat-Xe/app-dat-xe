@@ -39,13 +39,27 @@ public partial class DriverHomePage : ContentPage
         VehiclePlateLabel.Text = string.IsNullOrEmpty(vehiclePlate) ? "Biển số: —"  : $"Biển số: {vehiclePlate}";
 
         // Subscribe to hub events
-        _hub.NewTripRequest += OnNewTripRequest;
+        _hub.NewTripRequest         += OnNewTripRequest;
+        _hub.MaintenanceModeChanged += OnMaintenanceModeChanged;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _ = ConnectHubForMaintenanceAsync();
+    }
+
+    private async Task ConnectHubForMaintenanceAsync()
+    {
+        try { await _hub.StartAsync(); }
+        catch { }
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        _hub.NewTripRequest -= OnNewTripRequest;
+        _hub.NewTripRequest         -= OnNewTripRequest;
+        _hub.MaintenanceModeChanged -= OnMaintenanceModeChanged;
     }
 
     // ───────────────── Tab Switching ─────────────────
@@ -77,6 +91,12 @@ public partial class DriverHomePage : ContentPage
 
     private async Task GoOnlineAsync()
     {
+        if (Preferences.Get("isMaintenanceMode", false))
+        {
+            ShowError("Hệ thống đang bảo trì. Không thể nhận cuốc xe lúc này.");
+            return;
+        }
+
         // Kiểm tra kết nối Internet (luồng ngoại lệ 5.2)
         var connectivity = Connectivity.Current.NetworkAccess;
         if (connectivity != NetworkAccess.Internet)
@@ -153,6 +173,26 @@ public partial class DriverHomePage : ContentPage
             StatusInfoLabel.Text = "Offline";
             StatusInfoLabel.TextColor = Color.FromArgb("#8A8FA3");
         }
+    }
+
+    // ───────────────── Maintenance Mode ─────────────────
+
+    private async void OnMaintenanceModeChanged(bool isActive, string message, DateTime? estimatedEndTime)
+    {
+        Preferences.Set("isMaintenanceMode", isActive);
+        if (estimatedEndTime.HasValue)
+            Preferences.Set("maintenanceEndTime", estimatedEndTime.Value.ToString("O"));
+
+        if (isActive && _isOnline)
+            await GoOfflineAsync();
+
+        string display = isActive
+            ? (string.IsNullOrWhiteSpace(message) ? "Hệ thống đang bảo trì. Không thể nhận cuốc." : message)
+            : "Hệ thống hoạt động trở lại. Bạn có thể bắt đầu nhận cuốc.";
+        if (isActive && estimatedEndTime.HasValue)
+            display += $"\n\nDự kiến kết thúc: {estimatedEndTime:HH:mm dd/MM/yyyy}";
+
+        await DisplayAlert(isActive ? "Thông báo bảo trì" : "Hệ thống hoạt động", display, "OK");
     }
 
     // ───────────────── Pending Trips ─────────────────

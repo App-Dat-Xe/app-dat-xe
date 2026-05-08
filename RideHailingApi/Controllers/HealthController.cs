@@ -9,12 +9,19 @@ namespace RideHailingApi.Controllers
     {
         private readonly DatabaseRuntimeState   _state;
         private readonly FailoverSimulator       _simulator;
+        private readonly MaintenanceModeService  _maintenance;
 
-        public HealthController(DatabaseRuntimeState state, FailoverSimulator simulator)
+        public HealthController(DatabaseRuntimeState state, FailoverSimulator simulator, MaintenanceModeService maintenance)
         {
-            _state     = state;
-            _simulator = simulator;
+            _state       = state;
+            _simulator   = simulator;
+            _maintenance = maintenance;
         }
+
+        // GET /health/maintenance — kiểm tra trạng thái bảo trì (không cần auth, app gọi khi khởi động)
+        [HttpGet("maintenance")]
+        public IActionResult GetMaintenance()
+            => Ok(new { isActive = _maintenance.IsActive, message = _maintenance.Message });
 
         // GET /health/db — trạng thái failover của tất cả regions
         [HttpGet("db")]
