@@ -31,9 +31,7 @@ namespace RideHailingApp.Services
         {
             if (_connection?.State == HubConnectionState.Connected) return;
 
-            string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
-                ? "http://192.168.1.121:5108"
-                : "https://localhost:7285";
+            string baseUrl = "https://jawline-filling-amount.ngrok-free.dev";
 
             _connection = new HubConnectionBuilder()
                 .WithUrl($"{baseUrl}/hubs/trip", options =>
@@ -62,17 +60,36 @@ namespace RideHailingApp.Services
 
             _connection.Reconnecting += ex =>
             {
+                System.Diagnostics.Debug.WriteLine($"[SignalR] Reconnecting... Error: {ex?.Message}");
                 MainThread.BeginInvokeOnMainThread(() => Reconnecting?.Invoke(ex));
                 return Task.CompletedTask;
             };
             _connection.Reconnected += connId =>
             {
+                System.Diagnostics.Debug.WriteLine($"[SignalR] Reconnected successfully. ConnectionId: {connId}");
                 MainThread.BeginInvokeOnMainThread(() => Reconnected?.Invoke(connId));
                 return Task.CompletedTask;
             };
             _connection.Closed += ex =>
             {
+                System.Diagnostics.Debug.WriteLine($"[SignalR] Connection closed. Error: {ex?.Message}");
                 MainThread.BeginInvokeOnMainThread(() => Closed?.Invoke(ex));
+
+                // Tự động reconnect sau 5 giây nếu bị disconnect
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(5000);
+                    try
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SignalR] Attempting to reconnect...");
+                        await StartAsync();
+                    }
+                    catch (Exception reconnectEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SignalR] Reconnect failed: {reconnectEx.Message}");
+                    }
+                });
+
                 return Task.CompletedTask;
             };
 
@@ -83,9 +100,13 @@ namespace RideHailingApp.Services
                 MainThread.BeginInvokeOnMainThread(() => MaintenanceModeChanged?.Invoke(isActive, message, estimatedEndTime)));
 
             _connection.On<string, bool, string>("OnDatabaseStatusChanged", (region, isDegraded, message) =>
-                MainThread.BeginInvokeOnMainThread(() => DatabaseStatusChanged?.Invoke(region, isDegraded, message)));
+            {
+                System.Diagnostics.Debug.WriteLine($"[SignalR] OnDatabaseStatusChanged received: region={region}, isDegraded={isDegraded}, message={message}");
+                MainThread.BeginInvokeOnMainThread(() => DatabaseStatusChanged?.Invoke(region, isDegraded, message));
+            });
 
             await _connection.StartAsync();
+            System.Diagnostics.Debug.WriteLine($"[SignalR] Connected successfully. ConnectionId: {_connection.ConnectionId}");
         }
 
         public async Task JoinTripGroupAsync(string tripId)

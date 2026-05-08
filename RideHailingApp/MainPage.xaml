@@ -55,7 +55,7 @@
                         <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
                         <HorizontalStackLayout Spacing="8">
                             <Label x:Name="ReadOnlyBannerIcon" Text="⚠️" FontSize="13" VerticalOptions="Center"/>
-                            <Label x:Name="ReadOnlyBannerText" Text="Chế độ dự phòng • Không thể đặt xe"
+                            <Label x:Name="ReadOnlyBannerText" Text="Server chính gặp sự cố • Đang dùng server dự phòng • Không thể đặt xe"
                                    TextColor="#E65100" FontSize="13" VerticalOptions="Center"/>
                         </HorizontalStackLayout>
                     </Border>
@@ -67,7 +67,7 @@
                         <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
                         <HorizontalStackLayout Spacing="8">
                             <Label Text="✅" FontSize="13" VerticalOptions="Center"/>
-                            <Label Text="Hệ thống đã phục hồi • Có thể đặt xe bình thường"
+                            <Label Text="Server chính đã phục hồi • Hệ thống hoạt động bình thường • Có thể đặt xe"
                                    TextColor="#00B14F" FontSize="13" VerticalOptions="Center"/>
                         </HorizontalStackLayout>
                     </Border>
@@ -82,6 +82,53 @@
                             <Label Text="Hệ thống đang bảo trì • Chỉ xem lịch sử và hồ sơ"
                                    TextColor="#C62828" FontSize="13" VerticalOptions="Center"/>
                         </HorizontalStackLayout>
+                    </Border>
+
+                    <!-- Card chuyến đi đang hoạt động -->
+                    <Border x:Name="ActiveTripCard" IsVisible="False"
+                            Margin="16,10,16,0" BackgroundColor="White"
+                            StrokeThickness="1" Stroke="#00B14F" Padding="14,12">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="10">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="🚗" FontSize="16" VerticalOptions="Center"/>
+                                <Label Text="Chuyến đi đang hoạt động" FontSize="14" FontAttributes="Bold"
+                                       TextColor="#00B14F" VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+
+                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto"
+                                  RowSpacing="6" ColumnSpacing="10">
+                                <Ellipse Grid.Column="0" Fill="#2196F3"
+                                         WidthRequest="8" HeightRequest="8" VerticalOptions="Center"/>
+                                <Label Grid.Column="1" x:Name="ActiveTripCardPickup" Text=""
+                                       TextColor="#111" FontSize="13" VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"/>
+                                <Label Grid.Row="1" Grid.Column="0" Text="🏁"
+                                       FontSize="10" VerticalOptions="Center"/>
+                                <Label Grid.Row="1" Grid.Column="1" x:Name="ActiveTripCardDropoff"
+                                       Text="" TextColor="#888" FontSize="13"
+                                       VerticalOptions="Center" LineBreakMode="TailTruncation"/>
+                            </Grid>
+
+                            <HorizontalStackLayout Spacing="8">
+                                <Label x:Name="ActiveTripCardVehicle" Text="Xe máy"
+                                       TextColor="#666" FontSize="12"/>
+                                <Label Text="•" TextColor="#CCC" FontSize="12"/>
+                                <Label x:Name="ActiveTripCardFare" Text="0đ"
+                                       TextColor="#666" FontSize="12"/>
+                            </HorizontalStackLayout>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                <Button Grid.Column="0" Text="Xem chi tiết"
+                                        BackgroundColor="#E8F5E9" TextColor="#00B14F"
+                                        FontSize="13" HeightRequest="40" CornerRadius="8"
+                                        Clicked="OnViewActiveTripClicked"/>
+                                <Button Grid.Column="1" Text="Hủy chuyến"
+                                        BackgroundColor="#FFEBEE" TextColor="#FF5252"
+                                        FontSize="13" HeightRequest="40" CornerRadius="8"
+                                        Clicked="OnCancelActiveTripClicked"/>
+                            </Grid>
+                        </VerticalStackLayout>
                     </Border>
 
                     <!-- Tiêu đề dịch vụ -->
@@ -144,6 +191,24 @@
                             <Label x:Name="MapStatusLabel" Text="Đang xác định vị trí..."
                                    TextColor="#666" FontSize="13" VerticalOptions="Center"/>
                         </HorizontalStackLayout>
+                    </Border>
+
+                    <!-- Debug: SignalR Status (chỉ hiển thị khi debug) -->
+                    <Border Margin="16,0,16,16" BackgroundColor="#E3F2FD"
+                            StrokeThickness="1" Stroke="#2196F3" Padding="12,10">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="8"/></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="8">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="🔌" FontSize="14" VerticalOptions="Center"/>
+                                <Label x:Name="SignalRStatusLabel" Text="SignalR: Checking..."
+                                       TextColor="#1976D2" FontSize="12" FontAttributes="Bold"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Button Text="Test Notification" FontSize="12"
+                                    BackgroundColor="#2196F3" TextColor="White"
+                                    HeightRequest="36" CornerRadius="8"
+                                    Clicked="OnTestNotificationClicked"/>
+                        </VerticalStackLayout>
                     </Border>
 
                 </VerticalStackLayout>
@@ -687,6 +752,35 @@
             </Border>
 
         </Grid>
+
+        <!-- ════════════════════════════════════════════════ -->
+        <!--          OVERLAY THÔNG BÁO (Toast/Snackbar)    -->
+        <!-- ════════════════════════════════════════════════ -->
+        <Border x:Name="NotificationOverlay" IsVisible="False"
+                VerticalOptions="Start" HorizontalOptions="Fill"
+                Margin="16,60,16,0" BackgroundColor="White"
+                StrokeThickness="2" Padding="16,14"
+                InputTransparent="False">
+            <Border.StrokeShape><RoundRectangle CornerRadius="12"/></Border.StrokeShape>
+            <Border.Shadow>
+                <Shadow Brush="Black" Opacity="0.2" Radius="10" Offset="0,4"/>
+            </Border.Shadow>
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                <Label x:Name="NotificationIcon" Grid.Column="0" Text="ℹ️"
+                       FontSize="24" VerticalOptions="Center"/>
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
+                    <Label x:Name="NotificationTitle" Text="Thông báo"
+                           FontSize="15" FontAttributes="Bold" TextColor="#111"/>
+                    <Label x:Name="NotificationMessage" Text=""
+                           FontSize="13" TextColor="#666" LineBreakMode="WordWrap"/>
+                </VerticalStackLayout>
+                <Button Grid.Column="2" Text="✕" FontSize="18"
+                        BackgroundColor="Transparent" TextColor="#999"
+                        WidthRequest="32" HeightRequest="32" CornerRadius="16"
+                        Padding="0" VerticalOptions="Start"
+                        Clicked="OnCloseNotificationClicked"/>
+            </Grid>
+        </Border>
 
     </Grid>
 </ContentPage>

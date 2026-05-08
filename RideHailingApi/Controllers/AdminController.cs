@@ -353,18 +353,30 @@ namespace RideHailingApi.Controllers
 
         // POST /api/admin/simulate-down/{region}
         [HttpPost("simulate-down/{region}")]
-        public IActionResult SimulateDown(string region)
+        public async Task<IActionResult> SimulateDown(string region)
         {
             _failover.SetPrimaryDown(region);
-            return Ok(new { message = $"Primary [{region}] đã được giả lập SẬP. App chuyển sang Replica." });
+
+            // Broadcast tới tất cả app đang kết nối
+            string message = $"Máy chủ {region} gặp sự cố";
+            await _hub.Clients.Group("GlobalUsers")
+                .SendAsync("OnDatabaseStatusChanged", region, true, message);
+
+            return Ok(new { message = $"Primary [{region}] đã được giả lập SẬP. Tất cả app đã nhận thông báo chuyển sang Replica." });
         }
 
         // POST /api/admin/simulate-up/{region}
         [HttpPost("simulate-up/{region}")]
-        public IActionResult SimulateUp(string region)
+        public async Task<IActionResult> SimulateUp(string region)
         {
             _failover.SetPrimaryUp(region);
-            return Ok(new { message = $"Primary [{region}] đã được khôi phục. App trở lại bình thường." });
+
+            // Broadcast tới tất cả app đang kết nối
+            string message = $"Máy chủ {region} đã được khôi phục";
+            await _hub.Clients.Group("GlobalUsers")
+                .SendAsync("OnDatabaseStatusChanged", region, false, message);
+
+            return Ok(new { message = $"Primary [{region}] đã được khôi phục. Tất cả app đã nhận thông báo trở lại bình thường." });
         }
 
         // POST /api/admin/reset-manual-overrides

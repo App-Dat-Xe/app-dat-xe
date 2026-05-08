@@ -149,6 +149,12 @@ namespace RideHailingApp.Services
                         if (current != isDegraded)
                         {
                             Preferences.Set("isReadOnly", isDegraded);
+
+                            // Lấy region từ header nếu có
+                            string region = "South";
+                            if (resp.Headers.TryGetValues("X-Region", out var regionValues))
+                                region = regionValues.FirstOrDefault() ?? "South";
+
                             OnDatabaseStatusChanged?.Invoke(isDegraded);
                         }
                     }

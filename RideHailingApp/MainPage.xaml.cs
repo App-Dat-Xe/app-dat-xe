@@ -80,12 +80,16 @@ public partial class MainPage : ContentPage
         }
         else
         {
-            ServerStatusLabel.Text = isReadOnly
-                ? $"⚠ {regionName} — Dự phòng"
-                : $"● {regionName}";
-            ServerStatusLabel.TextColor = isReadOnly
-                ? MauiColor.FromArgb("#FFC107")
-                : MauiColor.FromArgb("#CCFFDD");
+            if (isReadOnly)
+            {
+                ServerStatusLabel.Text = $"⚠️ {regionName} — Dự phòng (Chỉ đọc)";
+                ServerStatusLabel.TextColor = MauiColor.FromArgb("#FFC107");
+            }
+            else
+            {
+                ServerStatusLabel.Text = $"● {regionName} — Hoạt động bình thường";
+                ServerStatusLabel.TextColor = MauiColor.FromArgb("#CCFFDD");
+            }
         }
 
         ReadOnlyBanner.IsVisible   = isReadOnly && !isMaintenance;
@@ -110,45 +114,49 @@ public partial class MainPage : ContentPage
                 : message;
             if (estimatedEndTime.HasValue)
                 display += $"\n\nDự kiến kết thúc: {estimatedEndTime:HH:mm dd/MM/yyyy}";
-            await DisplayAlert("Thông báo hệ thống", display, "Đã hiểu");
+
+            // Hiển thị notification overlay
+            ShowNotification("⛔", "Hệ thống bảo trì", display, "#FF5252");
         }
         else
         {
-            await DisplayAlert("Hệ thống hoạt động trở lại", "Bạn có thể đặt xe bình thường.", "OK");
+            // Hiển thị notification overlay
+            ShowNotification("✅", "Hệ thống hoạt động trở lại",
+                "Bạn có thể đặt xe bình thường.", "#00B14F");
         }
     }
 
     private async void OnDatabaseStatusChanged(string region, bool isDegraded, string message)
     {
-        // Cập nhật trạng thái hệ thống ngay lập tức bất kể vùng nào
-        // (Trong thực tế 1 vùng sập thì vùng kia vẫn dùng được, nhưng ở đây ta ưu tiên hiển thị real-time)
+        System.Diagnostics.Debug.WriteLine($"[MainPage] OnDatabaseStatusChanged: region={region}, isDegraded={isDegraded}, message={message}");
+
+        // Cập nhật trạng thái hệ thống ngay lập tức
         Preferences.Set("isReadOnly", isDegraded);
+        Preferences.Set("regionName", $"Server {(region == "North" ? "Miền Bắc" : "Miền Nam")}");
 
         MainThread.BeginInvokeOnMainThread(() => {
+            System.Diagnostics.Debug.WriteLine($"[MainPage] Updating UI on main thread");
             UpdateServerStatusUI();
 
             if (isDegraded)
             {
-                // Hiệu ứng chuyển sang chế độ failover
+                System.Diagnostics.Debug.WriteLine($"[MainPage] Showing failover animation");
                 ShowFailoverAnimation();
+                // Hiển thị notification overlay
+                ShowNotification("⚠️", "Sự cố máy chủ",
+                    $"{message}\n\nHệ thống tự động chuyển sang Database dự phòng. Bạn vẫn có thể xem thông tin nhưng không thể đặt xe mới.",
+                    "#FFC107");
             }
             else
             {
-                // Hiệu ứng phục hồi hệ thống
+                System.Diagnostics.Debug.WriteLine($"[MainPage] Showing recovery animation");
                 ShowRecoveryAnimation();
+                // Hiển thị notification overlay
+                ShowNotification("✅", "Máy chủ đã khôi phục",
+                    $"{message}\n\nHệ thống đã tự động quay trở lại hoạt động bình thường. Bạn có thể đặt xe như bình thường.",
+                    "#00B14F");
             }
         });
-
-        if (isDegraded)
-        {
-            await DisplayAlert("Sự cố máy chủ",
-                $"{message}\n\nHệ thống đang chạy trên Database dự phòng (Chế độ chỉ đọc).", "Đã hiểu");
-        }
-        else
-        {
-            await DisplayAlert("Máy chủ đã khôi phục",
-                "Hệ thống đã quay trở lại hoạt động bình thường trên Database chính.", "Tuyệt vời");
-        }
     }
 
     // ─────────────────────────────────────────────
@@ -244,7 +252,18 @@ public partial class MainPage : ContentPage
     //  HOME PANEL handlers
     // ─────────────────────────────────────────────
 
-    private void OnSearchBarTapped(object sender, TappedEventArgs e) => ShowPanel("search");
+    private void OnSearchBarTapped(object sender, TappedEventArgs e)
+    {
+        // Kiểm tra xem có chuyến đi đang hoạt động không
+        if (!string.IsNullOrEmpty(_activeTripId))
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+                await DisplayAlert("Không thể đặt xe mới",
+                    "Bạn đang có chuyến đi đang hoạt động.\nVui lòng hoàn thành hoặc hủy chuyến đi hiện tại trước khi đặt xe mới.", "OK"));
+            return;
+        }
+        ShowPanel("search");
+    }
 
     private void OnXeMayClicked(object sender, TappedEventArgs e)
     {
@@ -260,6 +279,14 @@ public partial class MainPage : ContentPage
             MainThread.BeginInvokeOnMainThread(async () =>
                 await DisplayAlert("Không thể đặt xe",
                     "Hệ thống đang ở chế độ dự phòng.\nChỉ có thể xem lịch sử chuyến đi.", "OK"));
+            return;
+        }
+        // Kiểm tra xem có chuyến đi đang hoạt động không
+        if (!string.IsNullOrEmpty(_activeTripId))
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+                await DisplayAlert("Không thể đặt xe mới",
+                    "Bạn đang có chuyến đi đang hoạt động.\nVui lòng hoàn thành hoặc hủy chuyến đi hiện tại trước khi đặt xe mới.", "OK"));
             return;
         }
         _selectedServiceType = "Xe máy";
@@ -280,6 +307,14 @@ public partial class MainPage : ContentPage
             MainThread.BeginInvokeOnMainThread(async () =>
                 await DisplayAlert("Không thể đặt xe",
                     "Hệ thống đang ở chế độ dự phòng.\nChỉ có thể xem lịch sử chuyến đi.", "OK"));
+            return;
+        }
+        // Kiểm tra xem có chuyến đi đang hoạt động không
+        if (!string.IsNullOrEmpty(_activeTripId))
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+                await DisplayAlert("Không thể đặt xe mới",
+                    "Bạn đang có chuyến đi đang hoạt động.\nVui lòng hoàn thành hoặc hủy chuyến đi hiện tại trước khi đặt xe mới.", "OK"));
             return;
         }
         _selectedServiceType = "Ô tô 4 chỗ";
@@ -584,6 +619,13 @@ public partial class MainPage : ContentPage
         {
             _activeTripId = result.Data.TripId.ToString();
 
+            // Lưu thông tin chuyến đi đang hoạt động
+            Preferences.Set("activeTripId", _activeTripId);
+            Preferences.Set("activeTripPickup", _pickupAddress);
+            Preferences.Set("activeTripDropoff", _destinationAddress);
+            Preferences.Set("activeTripVehicle", _selectedVehicleType);
+            Preferences.Set("activeTripFare", (double)_selectedFare);
+
             TripPickupLabel.Text      = _pickupAddress;
             TripDropoffLabel.Text     = _destinationAddress;
             TripStatusLabel.Text      = "● Đang tìm tài xế";
@@ -600,6 +642,15 @@ public partial class MainPage : ContentPage
             {
                 System.Diagnostics.Debug.WriteLine($"SignalR error: {ex.Message}");
             }
+
+            // Hiển thị thông báo đặt xe thành công
+            await DisplayAlert("✅ Đặt xe thành công",
+                $"Chuyến #{_activeTripId}\n\n" +
+                $"Từ: {_pickupAddress}\n" +
+                $"Đến: {_destinationAddress}\n" +
+                $"Loại xe: {_selectedVehicleType}\n" +
+                $"Giá dự kiến: {_selectedFare:#,##0}đ\n\n" +
+                $"Hệ thống đang tìm tài xế phù hợp cho bạn...", "OK");
 
             ShowPanel("searching");
             SearchingStatusLabel.Text =
@@ -689,9 +740,17 @@ public partial class MainPage : ContentPage
             try { await _hub.LeaveTripGroupAsync(_activeTripId); } catch { }
         }
 
+        // Xóa thông tin chuyến đi đang hoạt động
+        Preferences.Remove("activeTripId");
+        Preferences.Remove("activeTripPickup");
+        Preferences.Remove("activeTripDropoff");
+        Preferences.Remove("activeTripVehicle");
+        Preferences.Remove("activeTripFare");
+
         _activeTripId         = null;
         _encodedPolyline      = "";
         _isPassengerInVehicle = false;
+        ActiveTripCard.IsVisible = false;
         ShowPanel("home");
         ConfirmBookingButton.IsEnabled = true;
     }
@@ -770,7 +829,16 @@ public partial class MainPage : ContentPage
                     _searchTimeoutCts?.Cancel();
                     if (_activeTripId != null)
                         try { _hub.LeaveTripGroupAsync(_activeTripId).GetAwaiter().GetResult(); } catch { }
+
+                    // Xóa thông tin chuyến đi đang hoạt động
+                    Preferences.Remove("activeTripId");
+                    Preferences.Remove("activeTripPickup");
+                    Preferences.Remove("activeTripDropoff");
+                    Preferences.Remove("activeTripVehicle");
+                    Preferences.Remove("activeTripFare");
+
                     _activeTripId = null;
+                    ActiveTripCard.IsVisible = false;
                     ShowPanel("home");
                     ConfirmBookingButton.IsEnabled = true;
                     DisplayAlert("Hoàn thành chuyến đi",
@@ -862,6 +930,66 @@ public partial class MainPage : ContentPage
         RecoveryBanner.IsVisible = false;
     }
 
+    // ─────────────────────────────────────────────
+    //  Notification Overlay
+    // ─────────────────────────────────────────────
+
+    private CancellationTokenSource? _notificationCts;
+
+    private async void ShowNotification(string icon, string title, string message, string borderColor)
+    {
+        // Hủy notification cũ nếu đang hiển thị
+        _notificationCts?.Cancel();
+        _notificationCts = new CancellationTokenSource();
+        var token = _notificationCts.Token;
+
+        // Cập nhật nội dung
+        NotificationIcon.Text = icon;
+        NotificationTitle.Text = title;
+        NotificationMessage.Text = message;
+        NotificationOverlay.Stroke = new SolidColorBrush(MauiColor.FromArgb(borderColor));
+
+        // Hiệu ứng slide down + fade in
+        NotificationOverlay.Opacity = 0;
+        NotificationOverlay.TranslationY = -100;
+        NotificationOverlay.IsVisible = true;
+
+        try
+        {
+            await Task.WhenAll(
+                NotificationOverlay.FadeTo(1, 400),
+                NotificationOverlay.TranslateTo(0, 0, 400, Easing.CubicOut)
+            );
+
+            // Tự động ẩn sau 8 giây
+            await Task.Delay(8000, token);
+
+            if (!token.IsCancellationRequested)
+            {
+                await HideNotification();
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Notification bị hủy bởi notification mới
+        }
+    }
+
+    private async Task HideNotification()
+    {
+        await Task.WhenAll(
+            NotificationOverlay.FadeTo(0, 300),
+            NotificationOverlay.TranslateTo(0, -50, 300, Easing.CubicIn)
+        );
+        NotificationOverlay.IsVisible = false;
+    }
+
+    private async void OnCloseNotificationClicked(object sender, EventArgs e)
+    {
+        _notificationCts?.Cancel();
+        await HideNotification();
+    }
+
     private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
     {
         bool hasInternet = e.NetworkAccess == NetworkAccess.Internet;
@@ -881,18 +1009,158 @@ public partial class MainPage : ContentPage
         base.OnAppearing();
         UpdateServerStatusUI();
         _ = ConnectHubAsync();
+
+        // Khôi phục chuyến đi đang hoạt động nếu có
+        RestoreActiveTripIfExists();
     }
 
     private async Task ConnectHubAsync()
     {
-        try { await _hub.StartAsync(); }
-        catch { /* silently ignore — hub will retry on reconnect */ }
+        try
+        {
+            await _hub.StartAsync();
+            System.Diagnostics.Debug.WriteLine($"[MainPage] SignalR connected. State: {_hub.State}");
+            UpdateSignalRStatus();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainPage] SignalR connection failed: {ex.Message}");
+            UpdateSignalRStatus();
+        }
 
         // Sync trạng thái thực từ server mỗi lần vào app
         // (tránh hiển thị banner stale từ Preferences cũ)
         await _apiService.CheckAndSetMaintenanceAsync();
         await _apiService.CheckAndSetReadOnlyAsync();
         UpdateServerStatusUI();
+
+        // Đăng ký reconnect handler
+        _hub.Reconnected += OnSignalRReconnected;
+        _hub.Closed += OnSignalRClosed;
+    }
+
+    private void UpdateSignalRStatus()
+    {
+        var state = _hub.State;
+        string statusText = state switch
+        {
+            Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Connected => "SignalR: ✅ Connected",
+            Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Connecting => "SignalR: 🔄 Connecting...",
+            Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Reconnecting => "SignalR: 🔄 Reconnecting...",
+            Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Disconnected => "SignalR: ❌ Disconnected",
+            _ => "SignalR: ❓ Unknown"
+        };
+        SignalRStatusLabel.Text = statusText;
+    }
+
+    private void OnSignalRReconnected(string? connectionId)
+    {
+        System.Diagnostics.Debug.WriteLine($"[MainPage] SignalR reconnected. ConnectionId: {connectionId}");
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            UpdateSignalRStatus();
+            ShowNotification("🔄", "Kết nối khôi phục",
+                "Đã kết nối lại với server. Bạn sẽ nhận được thông báo real-time.",
+                "#2196F3");
+        });
+    }
+
+    private void OnSignalRClosed(Exception? error)
+    {
+        System.Diagnostics.Debug.WriteLine($"[MainPage] SignalR closed. Error: {error?.Message}");
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            UpdateSignalRStatus();
+            ShowNotification("⚠️", "Mất kết nối",
+                "Đã mất kết nối với server. Đang thử kết nối lại...",
+                "#FF9800");
+        });
+    }
+
+    // ─────────────────────────────────────────────
+    //  Debug Test Notification
+    // ─────────────────────────────────────────────
+
+    private void OnTestNotificationClicked(object sender, EventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"[MainPage] Test notification clicked. SignalR State: {_hub.State}");
+        ShowNotification("🧪", "Test Notification",
+            $"This is a test notification.\n\nSignalR State: {_hub.State}\nTime: {DateTime.Now:HH:mm:ss}",
+            "#9C27B0");
+    }
+
+    private void RestoreActiveTripIfExists()
+    {
+        string? savedTripId = Preferences.Get("activeTripId", (string?)null);
+        if (!string.IsNullOrEmpty(savedTripId))
+        {
+            _activeTripId = savedTripId;
+            string pickup = Preferences.Get("activeTripPickup", "");
+            string dropoff = Preferences.Get("activeTripDropoff", "");
+            string vehicle = Preferences.Get("activeTripVehicle", "");
+            double fare = Preferences.Get("activeTripFare", 0.0);
+
+            // Hiển thị card chuyến đi đang hoạt động trên Home
+            ActiveTripCard.IsVisible = true;
+            ActiveTripCardPickup.Text = pickup;
+            ActiveTripCardDropoff.Text = dropoff;
+            ActiveTripCardVehicle.Text = vehicle;
+            ActiveTripCardFare.Text = $"{fare:#,##0}đ";
+
+            TripPickupLabel.Text = pickup;
+            TripDropoffLabel.Text = dropoff;
+            TripStatusLabel.Text = "● Đang tìm tài xế";
+            TripStatusLabel.TextColor = MauiColor.FromArgb("#FFC107");
+
+            // Reconnect SignalR
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _hub.StartAsync();
+                    await _hub.JoinTripGroupAsync(_activeTripId);
+                }
+                catch { }
+            });
+        }
+        else
+        {
+            ActiveTripCard.IsVisible = false;
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    //  Active Trip Card Handlers
+    // ─────────────────────────────────────────────
+
+    private void OnViewActiveTripClicked(object sender, EventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_activeTripId))
+        {
+            // Chuyển sang panel đang tìm tài xế hoặc active trip
+            if (DriverInfoCard.IsVisible)
+            {
+                ShowPanel("active");
+            }
+            else
+            {
+                ShowPanel("searching");
+                string vehicle = Preferences.Get("activeTripVehicle", "");
+                double fare = Preferences.Get("activeTripFare", 0.0);
+                SearchingStatusLabel.Text = $"Chuyến #{_activeTripId}  •  {vehicle}  •  {fare:#,##0}đ";
+            }
+        }
+    }
+
+    private async void OnCancelActiveTripClicked(object sender, EventArgs e)
+    {
+        bool confirmed = await DisplayAlert("Hủy chuyến đi",
+            "Bạn có chắc muốn hủy chuyến đi đang hoạt động không?",
+            "Xác nhận hủy", "Không");
+        if (!confirmed) return;
+
+        await CancelTripAsync();
+        ActiveTripCard.IsVisible = false;
     }
 
     protected override void OnDisappearing()
@@ -904,5 +1172,8 @@ public partial class MainPage : ContentPage
         Connectivity.ConnectivityChanged     -= OnConnectivityChanged;
         _hub.MaintenanceModeChanged          -= OnMaintenanceModeChanged;
         _hub.DatabaseStatusChanged           -= OnDatabaseStatusChanged;
+        _hub.Reconnected                     -= OnSignalRReconnected;
+        _hub.Closed                          -= OnSignalRClosed;
+        ApiService.OnDatabaseStatusChanged   -= OnApiDatabaseStatusChanged;
     }
 }

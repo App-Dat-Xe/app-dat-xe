@@ -41,6 +41,7 @@ public partial class DriverHomePage : ContentPage
         // Subscribe to hub events
         _hub.NewTripRequest         += OnNewTripRequest;
         _hub.MaintenanceModeChanged += OnMaintenanceModeChanged;
+        _hub.DatabaseStatusChanged  += OnDatabaseStatusChanged;
     }
 
     protected override void OnAppearing()
@@ -60,6 +61,34 @@ public partial class DriverHomePage : ContentPage
         base.OnDisappearing();
         _hub.NewTripRequest         -= OnNewTripRequest;
         _hub.MaintenanceModeChanged -= OnMaintenanceModeChanged;
+        _hub.DatabaseStatusChanged  -= OnDatabaseStatusChanged;
+    }
+
+    // ───────────────── Database Status Changed ─────────────────
+
+    private async void OnDatabaseStatusChanged(string region, bool isDegraded, string message)
+    {
+        Preferences.Set("isReadOnly", isDegraded);
+        Preferences.Set("regionName", $"Server {(region == "North" ? "Miền Bắc" : "Miền Nam")}");
+
+        if (isDegraded)
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await DisplayAlert("⚠️ Sự cố máy chủ",
+                    $"{message}\n\nHệ thống tự động chuyển sang Database dự phòng.\n\n" +
+                    $"Bạn vẫn có thể xem thông tin nhưng không thể nhận cuốc mới.", "Đã hiểu");
+            });
+        }
+        else
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await DisplayAlert("✅ Máy chủ đã khôi phục",
+                    $"{message}\n\nHệ thống đã tự động quay trở lại hoạt động bình thường.\n\n" +
+                    $"Bạn có thể nhận cuốc như bình thường.", "Tuyệt vời");
+            });
+        }
     }
 
     // ───────────────── Tab Switching ─────────────────
