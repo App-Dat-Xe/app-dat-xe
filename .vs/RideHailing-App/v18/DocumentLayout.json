@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|RideHailingApi\\RideHailingApi.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|RideHailingApi\\RideHailingApi.csproj|solutionrelative:ridehailingapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapp\\mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{74EC6C5D-0C70-FCF1-2C8C-9417830175CB}|RideHailingApp\\RideHailing-App.csproj|solutionrelative:ridehailingapp\\mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -123,10 +127,6 @@
       "RelativeMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|RideHailingApi\\RideHailingApi.csproj|solutionrelative:ridehailingapi\\middleware\\regionmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|RideHailingApi\\RideHailingApi.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|RideHailingApi\\RideHailingApi.csproj|solutionrelative:ridehailingapi\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|RideHailingApi\\RideHailingApi.csproj|c:\\users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\ridehailingapi\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{4C771BB7-D843-4EA9-A64E-DB9CD4478CD5}|RideHailingApi\\RideHailingApi.csproj|solutionrelative:ridehailingapi\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
@@ -142,7 +142,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 31,
+          "SelectedChildIndex": 36,
           "Children": [
             {
               "$type": "Bookmark",
@@ -166,7 +166,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "DriverHomePage.xaml",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\DriverHomePage.xaml",
               "RelativeDocumentMoniker": "RideHailingApp\\DriverHomePage.xaml",
@@ -174,12 +174,11 @@
               "RelativeToolTip": "RideHailingApp\\DriverHomePage.xaml",
               "ViewState": "AgIAAMIAAAAAAAAAAAAAAAQBAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-05-08T05:44:00.427Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-08T05:44:00.427Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "south_rep.sql",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Data\\south_rep.sql",
               "RelativeDocumentMoniker": "RideHailingApi\\Data\\south_rep.sql",
@@ -190,7 +189,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "north_rep.sql",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Data\\north_rep.sql",
               "RelativeDocumentMoniker": "RideHailingApi\\Data\\north_rep.sql",
@@ -201,7 +200,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "DatabaseFailoverMonitorService.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Services\\DatabaseFailoverMonitorService.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Services\\DatabaseFailoverMonitorService.cs",
@@ -213,7 +212,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "north.sql",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Data\\north.sql",
               "RelativeDocumentMoniker": "RideHailingApi\\Data\\north.sql",
@@ -224,7 +223,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "south.sql",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Data\\south.sql",
               "RelativeDocumentMoniker": "RideHailingApi\\Data\\south.sql",
@@ -235,7 +234,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "App.xaml.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\App.xaml.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\App.xaml.cs",
@@ -247,7 +246,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "TripHubService.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\Services\\TripHubService.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\Services\\TripHubService.cs",
@@ -259,7 +258,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 17,
               "Title": "ApiService.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\Services\\ApiService.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\Services\\ApiService.cs",
@@ -271,7 +270,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 19,
               "Title": "FareService.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Services\\FareService.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Services\\FareService.cs",
@@ -283,7 +282,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "RefreshTokenService.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Services\\RefreshTokenService.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Services\\RefreshTokenService.cs",
@@ -295,7 +294,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 20,
               "Title": "UsersController.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Controllers\\UsersController.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Controllers\\UsersController.cs",
@@ -319,7 +318,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "LoginPage.xaml",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\LoginPage.xaml",
               "RelativeDocumentMoniker": "RideHailingApp\\LoginPage.xaml",
@@ -331,7 +330,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "LoginPage.xaml.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\LoginPage.xaml.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\LoginPage.xaml.cs",
@@ -343,7 +342,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 16,
               "Title": "TripsController.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Controllers\\TripsController.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Controllers\\TripsController.cs",
@@ -355,7 +354,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 21,
               "Title": "RegisterPage.xaml.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\RegisterPage.xaml.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\RegisterPage.xaml.cs",
@@ -367,7 +366,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 23,
               "Title": "AdminDebugController.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Controllers\\AdminDebugController.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Controllers\\AdminDebugController.cs",
@@ -379,7 +378,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 18,
               "Title": "BookingsController.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Controllers\\BookingsController.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Controllers\\BookingsController.cs",
@@ -391,7 +390,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 26,
               "Title": "ScheduledTripService.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Services\\ScheduledTripService.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Services\\ScheduledTripService.cs",
@@ -403,7 +402,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Program.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Program.cs",
@@ -415,7 +414,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 27,
               "Title": "DataContext.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Data\\DataContext.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Data\\DataContext.cs",
@@ -427,7 +426,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 28,
               "Title": "ScheduledTrip.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Models\\ScheduledTrip.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Models\\ScheduledTrip.cs",
@@ -439,7 +438,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 24,
               "Title": "RideHailingApi.csproj",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\RideHailingApi.csproj",
               "RelativeDocumentMoniker": "RideHailingApi\\RideHailingApi.csproj",
@@ -451,7 +450,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 29,
               "Title": "FileLoggerProvider.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\Logging\\FileLoggerProvider.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\Logging\\FileLoggerProvider.cs",
@@ -463,7 +462,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 25,
               "Title": "FileLogger.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\Logging\\FileLogger.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\Logging\\FileLogger.cs",
@@ -475,20 +474,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "MauiProgram.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\MauiProgram.cs",
               "RelativeDocumentMoniker": "RideHailingApp\\MauiProgram.cs",
               "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApp\\MauiProgram.cs",
               "RelativeToolTip": "RideHailingApp\\MauiProgram.cs",
-              "ViewState": "AgIAADYAAAAAAAAAAAAYwD4AAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAD4AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-03T10:16:55.554Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 22,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Controllers\\AuthController.cs",
@@ -500,7 +499,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "DataConnect.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Data\\DataConnect.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Data\\DataConnect.cs",
@@ -512,7 +511,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "DegradedModeMiddleware.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Middleware\\DegradedModeMiddleware.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Middleware\\DegradedModeMiddleware.cs",
@@ -524,7 +523,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 30,
               "Title": "RegionMiddleware.cs",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\Middleware\\RegionMiddleware.cs",
               "RelativeDocumentMoniker": "RideHailingApi\\Middleware\\RegionMiddleware.cs",
@@ -536,15 +535,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 0,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\appsettings.json",
               "RelativeDocumentMoniker": "RideHailingApi\\appsettings.json",
               "ToolTip": "C:\\Users\\lhnhan\\source\\repos\\app-dat-xe\\app-dat-xe\\RideHailingApi\\appsettings.json",
               "RelativeToolTip": "RideHailingApi\\appsettings.json",
-              "ViewState": "AgIAAAwAAAAAAAAAAADwvxwAAAAhAAAAAAAAAA==",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAiwEsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-05-03T09:21:23.342Z"
+              "WhenOpened": "2026-05-03T09:21:23.342Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
